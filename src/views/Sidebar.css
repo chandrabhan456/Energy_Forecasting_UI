@@ -1,0 +1,22 @@
+/* Sidenav.css */
+.sidenav {
+    width: 400px;
+    position: fixed;
+    top: 0;
+    left: 0;
+   
+    height: 100%;
+    padding: 20px;
+  }
+  
+  .sidenav ul {
+    list-style-type: none;
+    padding: 0;
+    text-align: left; /* Ensures text is aligned to the left */
+  }
+  
+  .sidenav li {
+    margin: 10px 0;
+    
+    cursor: pointer;
+  }
