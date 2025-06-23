@@ -5,123 +5,149 @@ import { RiFileExcel2Fill } from "react-icons/ri";
 import Papa from "papaparse";
 import { FaDownload } from "react-icons/fa";
 import LineGraph1 from "./Graphs/LineGraph1";
+import ForecastGraph1 from "./Graphs/ForecastGraph1";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useStateContext } from "../contexts/ContextProvider";
+import { updateSessionInDb } from "../utils/historyDb";
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+const dummyData = ["Index", "Date"];
 const headers = ["#", "Metric", "Value"];
 const columnWidths = [15, 70, 70]; // Only 3 columns, so only 0,1,2 used
 
 const DataConnection = () => {
   // State to manage selected options
+  const {
+    history,
+    setHistory,
+    csvFile1,
+    setCsvFile1,
+    activeHistory,
+    activeSessionName,
+    setActiveSessionName,
+  } = useStateContext();
+  const { addHistory } = useStateContext();
   const [inputValue1, setInputValue1] = useState("5000");
+  const [hourValue, sethourValue] = useState("22");
   const [inputValue2, setInputValue2] = useState("5325");
   const [inputValue3, setInputValue3] = useState("5687");
+  const [selectedview, setSelectedView] = useState(dummyData[0]);
   const [csvActive, setCsvActive] = useState(true);
   const [databaseActive, setDatabaseActive] = useState(false);
   const [cloudActive, setCloudActive] = useState(false);
+
+  console.log("csvFile1:", csvFile1);
+  console.log("activeHistory", activeHistory);
+
   const [csvFiles, setCsvFiles] = useState([]); // Store multiple files
   const [message, setMessage] = useState("");
   const [errmessage, setErrMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [csvFile, setCsvFile] = useState(null);
+  const [csvFile, setCsvFile] = useState(activeHistory ? csvFile1 : null);
+
   const [csvData, setCsvData] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [dateValue, setDateValue] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [forecastResult, setForecastResult] = useState(null);
   const [activeButton, setActiveButton] = useState("none");
+
   const [metrix, setMetrix] = useState(null);
   const [forecast, setForecast] = useState(false);
-
+  useEffect(() => {
+    setCsvFile(activeHistory ? csvFile1 : null);
+    if (activeHistory) {
+      setActiveButton("none");
+      setForecast(false);
+    }
+  }, [activeHistory, csvFile1]);
   const [csvData1, setCsvData1] = useState([]);
   const [indexResult1, setIndexResult1] = useState({});
   const [indexResult2, setIndexResult2] = useState([]);
   const [indexResult3, setIndexResult3] = useState([]);
+  const [csvResult, setCsvResult] = useState([]);
   const [graphData1, setGraphData1] = useState([]);
   const [graphData2, setGraphData2] = useState([]);
   const [graphData3, setGraphData3] = useState([]);
+  const [graphLabel1, setGraphLabel1] = useState("");
+  const [graphLabel2, setGraphLabel2] = useState("");
+  const [graphLabel3, setGraphLabel3] = useState("");
+  const [graphLabel4, setGraphLabel4] = useState("");
+  const [dateResult3, setDateResult3] = useState([]);
+  const [graphData4, setGraphData4] = useState([]);
   const chartRef1 = useRef();
   const chartRef2 = useRef();
   const chartRef3 = useRef();
+  const chartRef4 = useRef();
+  const minDate = new Date(2018, 2, 1); // March 1, 2018
+  const maxDate = new Date(2022, 2, 31); // March 31, 2022
   const handleFileChange = (event) => {
-    console.log("File input event:", event.target.files);
-    const files = Array.from(event.target.files); // Convert FileList to array
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setCsvData([]);
+    setCsvFile(null); // Reset existing
+    setActiveButton("none");
     setForecast(false);
-    // Filter valid files
-    const validFiles = files.filter(
-      (file) =>
-        file.type === "text/csv" ||
-        file.type === "application/vnd.ms-excel" ||
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    // Accept only CSV and Excel
+    const validTypes = [
+      "text/csv",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ];
 
-    // Alert if no valid files are selected
+    if (!validTypes.includes(file.type)) {
+      alert("Please select a valid CSV or Excel file.");
+      event.target.value = null;
+      return;
+    }
 
-    // Map valid files to include metadata
-    const newFiles = validFiles.map((file) => ({
+    // Set file with metadata
+    setCsvFile({
       fileObject: file,
       name: file.name,
       type: file.type,
       timestamp: Date.now(),
-    }));
+    });
 
-    // Append new files to the existing state
-    setCsvFiles((prev) => [...prev, ...newFiles]);
-
-    // Clear the file input to allow re-selection of the same file
+    // Clear input to allow re-uploading the same file
     event.target.value = null;
   };
-  const handleCsvRemove = (fileObject) => {
-    console.log("removecsv", fileObject);
-    // Filter out the file to be removed
+
+  // Remove the file
+  const handleCsvRemove = () => {
+    setCsvFile(null);
+    setCsvFile1(null);
+    setCsvData([]);
     setActiveButton("none");
-    setForecastResult(null);
     setForecast(false);
-    const updatedFiles = csvFiles.filter(
-      (file) => file.name !== fileObject.name
-    );
-    console.log("updatedcsvFIles", !updatedFiles);
-    // Update the state with the remaining files
-    setCsvFiles(updatedFiles);
-    setMessage("");
-    setErrMessage("");
-    console.log("updated files", updatedFiles.length);
-    if (updatedFiles.length === 0) {
-      console.log("empty");
-      setCsvFiles([]);
-    } else {
-      const firstFileURL = URL.createObjectURL(updatedFiles[0].fileObject);
-      console.log("firstfileurl", firstFileURL);
-      // setCsvFiles(firstFileURL);
-    }
   };
-  const handleCsvClick = (fileObject) => {
-    if (!fileObject) return;
-    setActiveButton("file");
+
+  // Parse and preview the file (first 20 rows)
+  const handleCsvClick = () => {
+    if (!csvFile) return;
     setLoading(true);
-    setCsvData([]); // Reset current data before parsing a new file
+    setCsvData([]); // Reset
+    setActiveButton("file");
+    let rowCount = 0;
 
-    let rowCount = 0; // Initialize a counter to track the number of rows parsed
-
-    Papa.parse(fileObject, {
+    Papa.parse(csvFile.fileObject, {
       header: true,
       skipEmptyLines: true,
-      worker: true, // Use a web worker for parsing
+      worker: true,
       chunk: (results, parser) => {
         const newRows = results.data;
-        const remainingRows = 20 - rowCount; // Calculate remaining rows needed to reach 20
-
+        const remainingRows = 20 - rowCount;
         if (remainingRows > 0) {
-          // Add only the remaining rows needed to reach 20
           setCsvData((prevData) => [
             ...prevData,
             ...newRows.slice(0, remainingRows),
           ]);
           rowCount += newRows.length;
-
           if (rowCount >= 20) {
-            parser.abort(); // Stop parsing once 20 rows have been processed
+            parser.abort();
           }
         }
       },
@@ -129,12 +155,11 @@ const DataConnection = () => {
         setLoading(false);
       },
       error: (error) => {
-        console.error("Error parsing CSV file:", error);
+        alert("Error parsing CSV file: " + error.message);
         setLoading(false);
       },
     });
   };
-
   useEffect(() => {
     console.log("Updated csvData:", csvData);
   }, [csvFiles, csvData]); // This will run after pdfFiles state is updated
@@ -152,34 +177,107 @@ const DataConnection = () => {
       return obj;
     });
   }
+
   const handleUpload = async () => {
+    if (!csvFile) {
+      setErrMessage("No file selected.");
+      return;
+    }
+
     setIsLoading(true);
-    // Create a FormData object
-    const formData = new FormData();
     setActiveButton("Upload");
-    csvFiles.forEach((file) => {
-      formData.append("file", file.fileObject); // 'files' is the key used in the backend
-    });
+
+    const formData = new FormData();
+    formData.append("file", csvFile.fileObject);
 
     try {
       const response = await fetch("http://127.0.0.1:5000/upload", {
         method: "POST",
-        body: formData, // Send FormData directly
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to upload files: ${response.statusText}`);
+        throw new Error(`Failed to upload file: ${response.statusText}`);
       }
 
       const data = await response.json();
       setMessage(data.message);
+
+      // Read file content as text
+      const content = await csvFile.fileObject.text();
+
+      // Create new session object
+      const newSession = {
+        sessionName: `Session ${history.length + 1}`,
+        files: [
+          {
+            name: csvFile.fileObject.name,
+            content: content,
+          },
+        ],
+      };
+
+      // Append to React state history
+      setHistory((prev) => [...prev, newSession]);
+      setActiveSessionName(newSession.sessionName);
+      
+      // Add to IndexedDB (assuming addHistory handles this)
+      await addHistory(newSession);
     } catch (error) {
-      console.error("Error creating index:", error);
-      setErrMessage(`Error creating index: ${error.message}`);
+      console.error("Error uploading file:", error);
+      setErrMessage(`Error uploading file: ${error.message}`);
     } finally {
       setIsLoading(false);
+      setActiveButton("");
     }
   };
+useEffect(() => {
+    console.log("activeSessionName changed:", activeSessionName);
+  }, [activeSessionName]);
+  function formatDate(date) {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = hourValue; // String(date.getHours()).padStart(2, '0');
+    return `${year}-${month}-${day}/${hour}`;
+  }
+  const GetCsvGraph = async () => {
+    setLoading(true);
+
+    setForecastResult(null); // Reset before new fetch
+    setMessage("");
+    // Your logic here
+
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/InputDataImage`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+
+      // Parse JSON response
+      const data = await response.json();
+      console.log("API response", data);
+
+      // Set base64 image (prepend the proper data URL prefix)
+
+      if (data.csv_text_Input_DataPlot) {
+        setCsvResult(data.csv_text_Input_DataPlot);
+      }
+      // Set metrics if you want to show them in a table
+    } catch (error) {
+      console.error("Error fetching metrics:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateForecast = async () => {
     setLoading(true);
     setActiveButton("Graph");
@@ -206,6 +304,7 @@ const DataConnection = () => {
       if (data.results?.Evaluation_Metrics) {
         setMetrix({ Evaluation_Metrics: data.results.Evaluation_Metrics });
         setForecast(true);
+        GetCsvGraph();
       }
     } catch (error) {
       console.error("Error fetching image:", error);
@@ -226,37 +325,116 @@ const DataConnection = () => {
     setForecastResult(null); // Reset before new fetch
     setMessage("");
     // Your logic here
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:5000/results/${inputValue1}/${inputValue2}/${inputValue3}`,
-        {
+    if (selectedview === "Index") {
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:5000/results/${inputValue1}/${inputValue2}/${inputValue3}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+
+        // Parse JSON response
+        const data = await response.json();
+        console.log("API response", data);
+
+        // Set base64 image (prepend the proper data URL prefix)
+
+        if (data.csv_text_index1) {
+          setIndexResult1(data.csv_text_index1);
+          setIndexResult2(data.csv_text_index2);
+          setIndexResult3(data.csv_text_index3);
+          setGraphLabel1(data[`Index_${inputValue1}_hours_are`]);
+          setGraphLabel2(data[`Index_${inputValue2}_hours_are`]);
+          setGraphLabel3(data[`Index_${inputValue3}_hours_are`]);
+
+          console.log("activeSessionName", activeSessionName);
+
+          setHistory((prevHistory) => {
+            if (prevHistory.length === 0) return prevHistory;
+
+            // Find the session by name (or by another unique property)
+            const targetSessionName = activeSessionName; // <-- set this dynamically as needed
+            const newHistory = prevHistory.map((session) => {
+              if (session.sessionName !== targetSessionName) {
+                return session; // Leave other sessions unchanged
+              }
+
+              const resultFilename = `Forecast_Results_index1.csv`;
+              const resultFile = {
+                name: resultFilename,
+                content: data.csv_text_index1,
+                createdAt: new Date().toISOString(),
+                type: "index_result1",
+              };
+
+              // Replace or add the file
+              let replaced = false;
+              let newFiles = (session.files || []).map((file) => {
+                if (file.name === resultFilename) {
+                  replaced = true;
+                  return resultFile; // Replace
+                }
+                return file;
+              });
+              if (!replaced) {
+                newFiles = [...newFiles, resultFile];
+              }
+
+              const updatedSession = { ...session, files: newFiles };
+
+              updateSessionInDb(updatedSession); // Update in IndexedDB
+              return updatedSession;
+            });
+
+            return newHistory;
+          });
+        }
+        // Set metrics if you want to show them in a table
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      const date = formatDate(dateValue);
+      console.log("selected date123", date);
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/results/${date}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.statusText}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
+        // Parse JSON response
+        const data = await response.json();
+        console.log("API response", data);
+
+        // Set base64 image (prepend the proper data URL prefix)
+
+        if (data.csv_text_index1) {
+          setDateResult3(data.csv_text_index1);
+
+          setGraphLabel4(data[`Index_4_hours_are`]);
+        }
+        // Set metrics if you want to show them in a table
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      } finally {
+        setLoading(false);
       }
-
-      // Parse JSON response
-      const data = await response.json();
-      console.log("API response", data);
-
-      // Set base64 image (prepend the proper data URL prefix)
-
-      if (data.csv_text_index1) {
-        setIndexResult1(data.csv_text_index1);
-        setIndexResult2(data.csv_text_index2);
-        setIndexResult3(data.csv_text_index3);
-      }
-      // Set metrics if you want to show them in a table
-    } catch (error) {
-      console.error("Error fetching metrics:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -278,7 +456,6 @@ const DataConnection = () => {
       img.src = "data:image/svg+xml;base64," + svg64;
     });
   };
-
   const handleDownload = async () => {
     const doc = new jsPDF();
 
@@ -294,7 +471,7 @@ const DataConnection = () => {
       head: [headers],
       body: rows,
       startY: 25,
-      margin: { left: 27.5 }, // horizontal position (acts like startX)
+      margin: { left: 27.5 },
       columnStyles: {
         0: { cellWidth: columnWidths[0] },
         1: { cellWidth: columnWidths[1] },
@@ -307,38 +484,45 @@ const DataConnection = () => {
       },
     });
 
-    // Get Y position after table 1
     let finalY = doc.lastAutoTable.finalY || 50;
-    const chartWidth = 180; // mm
-    const chartHeight = 60; // mm
+    const chartWidth = 180;
+    const chartHeight = 60;
 
-    // Helper to add a chart
     const addChartToPdf = async (chartRef, label, y) => {
-      const svg = chartRef.current.querySelector("svg");
-      if (svg) {
-        const width = svg.width?.baseVal?.value || 600;
-        const height = svg.height?.baseVal?.value || 200;
-        const imgData = await svgToPngDataUrl(svg, width, height);
+      if (chartRef?.current) {
+        const svg = chartRef.current.querySelector("svg");
+        if (svg) {
+          const width = svg.width?.baseVal?.value || 600;
+          const height = svg.height?.baseVal?.value || 200;
+          const imgData = await svgToPngDataUrl(svg, width, height);
 
-        doc.setFontSize(12);
-        doc.text(label, 105, y + 8, { align: "center" }); // Add label above chart
-        doc.addImage(imgData, "PNG", 15, y + 10, chartWidth, chartHeight);
-        return y + 10 + chartHeight + 10; // Next Y position (10mm gap)
+          doc.setFontSize(12);
+          doc.text(label, 105, y + 8, { align: "center" });
+          doc.addImage(imgData, "PNG", 15, y + 10, chartWidth, chartHeight);
+          return y + 10 + chartHeight + 10;
+        }
       }
       return y;
     };
 
-    // Add all three charts in order, after the table
-    finalY = await addChartToPdf(
-      chartRef1,
-      `Example ${inputValue1}`,
-      finalY + 8
-    );
-    finalY = await addChartToPdf(chartRef2, `Example ${inputValue2}`, finalY);
-    finalY = await addChartToPdf(chartRef3, `Example ${inputValue3}`, finalY);
+    // Always add chartRef1 if present
+    if (chartRef1?.current && chartRef1.current.querySelector("svg")) {
+      finalY = await addChartToPdf(
+        chartRef1,
+        `Example ${graphLabel1}`,
+        finalY + 8
+      );
+    }
+    // Only add chartRef2 if present
+    if (chartRef2?.current && chartRef2.current.querySelector("svg")) {
+      finalY = await addChartToPdf(chartRef2, `Example ${graphLabel2}`, finalY);
+    }
+    // Only add chartRef3 if present
+    if (chartRef3?.current && chartRef3.current.querySelector("svg")) {
+      finalY = await addChartToPdf(chartRef3, `Example ${graphLabel3}`, finalY);
+    }
 
-    // -- ADD YOUR CONSUMPTION TABLE HERE --
-
+    // Add your consumption table
     const consumptionHeaders = [
       ["Time", "Predicted Consumption", "Actual Consumption"],
     ];
@@ -351,34 +535,56 @@ const DataConnection = () => {
     autoTable(doc, {
       head: consumptionHeaders,
       body: consumptionRows,
-      startY: finalY + 8, // 8mm below last chart
+      startY: finalY + 8,
       margin: { left: 27.5 },
       headStyles: { fillColor: [200, 220, 255] },
     });
 
-    doc.save("evaluation-matrix.pdf");
+    doc.save("Forecast-Report.pdf");
   };
 
   useEffect(() => {
-    if (indexResult1 && indexResult1.length > 0) {
-      const parsed = parseCSV(indexResult1);
-      setGraphData1(parsed);
-      console.log("parsed data:", parsed);
-    }
-    if (indexResult2 && indexResult2.length > 0) {
-      const parsed = parseCSV(indexResult2);
-      setGraphData2(parsed);
-      console.log("parsed data:", parsed);
-    }
-    if (indexResult3 && indexResult3.length > 0) {
-      const parsed = parseCSV(indexResult3);
-      setGraphData3(parsed);
-      console.log("parsed data:", parsed);
+    if (selectedview === "Index") {
+      if (indexResult1 && indexResult1.length > 0) {
+        const parsed = parseCSV(indexResult1);
+        setGraphData1(parsed);
+        console.log("parsed data:", parsed);
+      }
+      if (indexResult2 && indexResult2.length > 0) {
+        const parsed = parseCSV(indexResult2);
+        setGraphData2(parsed);
+        console.log("parsed data:", parsed);
+      }
+      if (indexResult3 && indexResult3.length > 0) {
+        const parsed = parseCSV(indexResult3);
+        setGraphData3(parsed);
+        console.log("parsed data:", parsed);
+      } else {
+        setGraphData1([]);
+        setGraphData4([]);
+      }
     } else {
-      setGraphData1([]);
+      if (dateResult3 && dateResult3.length > 0) {
+        const parsed = parseCSV(dateResult3);
+        setGraphData4(parsed);
+        console.log("parsed data:", parsed);
+      } else {
+        setGraphData1([]);
+        setGraphData4([]);
+      }
     }
-  }, [activeButton, csvData1, indexResult1, indexResult2, indexResult3]);
-
+  }, [
+    activeButton,
+    csvData1,
+    indexResult1,
+    indexResult2,
+    indexResult3,
+    dateResult3,
+  ]);
+  useEffect(() => {
+    console.log("csvDataaaa", csvResult);
+  }),
+    [csvResult];
   return (
     <div className="flex flex-col mt-0 ml-10 space-y-2 w-full ">
       <div className="mt-4 ml-[12%] ">
@@ -417,7 +623,6 @@ const DataConnection = () => {
                 <input
                   id="file-upload"
                   type="file"
-                  multiple
                   accept=".csv, .xls, .xlsx"
                   onChange={handleFileChange}
                   className="hidden"
@@ -436,101 +641,101 @@ const DataConnection = () => {
                   {csvActive && (
                     <>
                       <div className="  mt-2">
-                        <div className="file-info    ">
-                          {csvFiles.length > 0 && (
+                        {csvFile && (
+                          <div className="  ml-16">
+                            {console.log("ramm", csvFiles)}
                             <div>
-                              <div className="  ml-2">
-                                {console.log("ramm", csvFiles)}
-                                {csvFiles.map((file, index) => (
-                                  <div key={index} className="flex  mb-2">
-                                    {/* Icon based on file type */}
-                                    <div className=" ">
-                                      {file.type && (
-                                        <RiFileExcel2Fill
-                                          style={{
-                                            color: "green",
-                                            marginTop: "4px",
-
-                                            width: "100%", // Use 100% width to fill the allocated space
-                                          }}
-                                        />
-                                      )}
-                                    </div>
-
-                                    {/* File Name */}
-                                    <p
-                                      className="  truncate dark:text-[#d3d3d3] text-black"
+                              {csvFile && (
+                                <div className="flex items-center mb-2">
+                                  {csvFile.type && (
+                                    <RiFileExcel2Fill
                                       style={{
-                                        cursor: "pointer",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
-                                        width: "40%", // Set width to 20% as specified
-                                        margin: "0",
+                                        color: "green",
+                                        marginTop: "4px",
+                                        marginRight: "8px",
+                                        width: "24px",
                                       }}
-                                    >
-                                      {file.name}
-                                    </p>
-
-                                    {/* Preview File Button */}
-                                    <button
-                                      className="ml-1 text-center text-white bg-blue-500 border border-blue-700 rounded "
-                                      style={{
-                                        cursor: "pointer",
-                                        width: "20%", // Set width to 20% for the button
-                                      }}
-                                      onClick={() =>
-                                        handleCsvClick(file.fileObject)
-                                      }
-                                    >
-                                      Preview
-                                    </button>
-
-                                    {/* Remove File Button */}
-                                    <button
-                                      className="ml-1 text-left text-white bg-red-300 border border-red-300 rounded p-0.1 flex items-center justify-center"
-                                      style={{
-                                        cursor: "pointer",
-                                        width: "20%", // Set width to 20% for the button
-                                      }}
-                                      onClick={() => handleCsvRemove(file)}
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                ))}
-
-                                <div className="mt-2 flex space-x-2">
-                                  {/* Button and Status */}
-                                  {!forecast && (
-                                    <>
-                                      <button
-                                        className={`text-lg px-4 py-2 border rounded ${
-                                          activeButton === "Upload"
-                                            ? "bg-blue-500 border-blue-800"
-                                            : "bg-white border-gray-300"
-                                        } text-black`}
-                                        onClick={handleUpload}
-                                      >
-                                        Upload File
-                                      </button>
-
-                                      <button
-                                        className={`text-lg px-4 py-2 border rounded ${
-                                          activeButton === "Graph"
-                                            ? "bg-blue-500 border-blue-800"
-                                            : "bg-white border-gray-300"
-                                        } text-black`}
-                                        onClick={handleGenerateForecast}
-                                      >
-                                        Generate Forecast
-                                      </button>
-                                      <button className="text-lg px-4 py-2 w-32 cursor-default"></button>
-                                    </>
+                                    />
                                   )}
-                                  {forecast && (
-                                    <>
-                                      <div className="flex space-x-2 mt-4">
+                                  <p
+                                    className="truncate dark:text-[#d3d3d3] text-black mr-2"
+                                    style={{
+                                      cursor: "pointer",
+                                      overflow: "hidden",
+                                      whiteSpace: "nowrap",
+                                      textOverflow: "ellipsis",
+                                      margin: "0",
+                                    }}
+                                  >
+                                    {csvFile.name}
+                                  </p>
+                                  <button
+                                    className="ml-1 text-center text-white bg-blue-500 border border-blue-700 rounded px-2"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() =>
+                                      handleCsvClick(csvFile.fileObject)
+                                    }
+                                  >
+                                    Preview
+                                  </button>
+                                  <button
+                                    className="ml-1 text-left text-white bg-red-300 border border-red-300 rounded px-2"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => handleCsvRemove(csvFile)}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-2 flex space-x-2 whitespace-nowrap">
+                              {/* Button and Status */}
+                              {!forecast && (
+                                <>
+                                  <button
+                                    className={`text-lg px-4 py-2 border rounded ${
+                                      activeButton === "Upload"
+                                        ? "bg-blue-500 border-blue-800 text-white"
+                                        : "bg-white border-gray-300 text-black"
+                                    } `}
+                                    onClick={handleUpload}
+                                  >
+                                    Upload File
+                                  </button>
+
+                                  <button
+                                    className={`text-lg px-4 py-2 border rounded ${
+                                      activeButton === "Graph"
+                                        ? "bg-blue-500 border-blue-800 text-white"
+                                        : "bg-white border-gray-300 text-black"
+                                    } `}
+                                    onClick={handleGenerateForecast}
+                                  >
+                                    Generate Forecast
+                                  </button>
+                                  <button className="text-lg px-4 py-2 w-32 cursor-default"></button>
+                                </>
+                              )}
+                              {forecast && (
+                                <>
+                                  <div className="flex space-x-2 mt-4">
+                                    {/* Input Box 1 */}
+                                    <select
+                                      value={selectedview}
+                                      onChange={(e) =>
+                                        setSelectedView(e.target.value)
+                                      }
+                                      className="main-page-dropdown w-32"
+                                      style={{ marginRight: "10px" }}
+                                    >
+                                      {dummyData.map((item) => (
+                                        <option key={item} value={item}>
+                                          {item}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {selectedview === "Index" ? (
+                                      <>
                                         {/* Input Box 1 */}
                                         <input
                                           type="text"
@@ -563,71 +768,94 @@ const DataConnection = () => {
                                           className="border w-24 rounded px-2 py-1"
                                           placeholder="Enter value 3"
                                         />
+                                      </>
+                                    ) : (
+                                      <>
+                                        <DatePicker
+                                          selected={dateValue}
+                                          onChange={(date) =>
+                                            setDateValue(date)
+                                          }
+                                          className="border w-32 rounded px-2 py-1 h-12"
+                                          placeholderText="Select date"
+                                          dateFormat="yyyy-MM-dd"
+                                          minDate={minDate}
+                                          maxDate={maxDate}
+                                          openToDate={minDate} // <-- This line makes calendar open at minDate
+                                          showMonthYearPicker={false} // Optional: true if you want month-year only
+                                        />
+                                        <input
+                                          type="text"
+                                          value={hourValue}
+                                          onChange={(e) =>
+                                            sethourValue(e.target.value)
+                                          }
+                                          className="border w-24 rounded px-2 py-1"
+                                          placeholder="Enter value 1"
+                                        />
+                                      </>
+                                    )}
 
-                                        {/* Show Results Button */}
-                                        <button
-                                          className={`text-lg px-4 py-2 border rounded ${
-                                            activeButton === "Result"
-                                              ? "bg-blue-500 border-blue-800"
-                                              : "bg-white border-gray-300"
-                                          } text-black`}
-                                          onClick={() => {
-                                            setActiveButton("Result");
-                                            handleEvaluationMetrix();
-                                          }}
-                                        >
-                                          Show Results
-                                        </button>
-
-                                        {/* Download Icon */}
-                                        <button
-                                          className={`text-lg px-4 py-2 border rounded ${
-                                            activeButton === "Graph"
-                                              ? "bg-blue-500 border-blue-800"
-                                              : "bg-white border-gray-300"
-                                          } text-black`}
-                                          onClick={handleShowForecast}
-                                        >
-                                          Show Forecast
-                                        </button>
-                                        <div
-                                          className="cursor-pointer"
-                                          onClick={handleDownload}
-                                        >
-                                        {activeButton === 'Result' &&  <FaDownload className="mt-3 text-blue-500" />}
-                                        </div>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                                <div>
-                                  {isLoading && (
-                                    <div className="progress-bar-container mt-3">
-                                      <div className="progress-bar"></div>
-                                    </div>
-                                  )}
-                                  {!isLoading && message && (
-                                    <p
-                                      className="message-box"
-                                      style={{
-                                        overflow: "hidden", // Prevent overflowing text
-                                        whiteSpace: "nowrap", // Prevent wrapping to the next line
-                                        textOverflow: "ellipsis", // Add ellipsis for overflow
-                                        maxWidth: "98%", // Adjust the width as needed
+                                    {/* Show Results Button */}
+                                    <button
+                                      className={`text-lg px-4 py-2 border rounded ${
+                                        activeButton === "Result"
+                                          ? "bg-blue-500 border-blue-800 text-white"
+                                          : "bg-white border-gray-300 text-black"
+                                      } `}
+                                      onClick={() => {
+                                        setActiveButton("Result");
+                                        handleEvaluationMetrix();
                                       }}
                                     >
-                                      {message}
-                                    </p> // Display the success or error message
-                                  )}
-                                </div>
-                              </div>
+                                      Show Results
+                                    </button>
+
+                                    {/* Download Icon */}
+                                    <button
+                                      className={`text-lg px-4 py-2 border rounded ${
+                                        activeButton === "Graph"
+                                          ? "bg-blue-500 border-blue-800 text-white"
+                                          : "bg-white border-gray-300 text-black"
+                                      } `}
+                                      onClick={handleShowForecast}
+                                    >
+                                      Show Forecast
+                                    </button>
+                                    <div
+                                      className="cursor-pointer"
+                                      onClick={handleDownload}
+                                    >
+                                      {activeButton === "Result" && (
+                                        <FaDownload className="mt-3 text-blue-500" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </div>
-                          )}
-                          <div
-                            className="item-left "
-                            style={{ marginTop: "-12px" }}
-                          ></div>
-                        </div>
+                            <div>
+                              {isLoading && (
+                                <div className="progress-bar-container mt-3">
+                                  <div className="progress-bar"></div>
+                                </div>
+                              )}
+                              {!isLoading && message && (
+                                <p
+                                  className="message-box"
+                                  style={{
+                                    overflow: "hidden", // Prevent overflowing text
+                                    whiteSpace: "nowrap", // Prevent wrapping to the next line
+                                    textOverflow: "ellipsis", // Add ellipsis for overflow
+                                    maxWidth: "98%", // Adjust the width as needed
+                                  }}
+                                >
+                                  {message}
+                                </p> // Display the success or error message
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -639,7 +867,7 @@ const DataConnection = () => {
                     className=" shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg text-center text-2xl"
                     style={{ padding: "10px", height: "80%" }}
                   >
-                    Generating Forcast...
+                    Generating Forecast...
                   </p>
                 )}
                 {loading && activeButton === "Result" && (
@@ -655,12 +883,12 @@ const DataConnection = () => {
                   (loading ? (
                     <p
                       className="shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg text-center text-2xl flex items-center justify-center"
-                      style={{ padding: "10px", height: "80%" }}
+                      style={{ padding: "10px", height: "60%" }}
                     ></p>
                   ) : csvData.length > 0 ? (
                     <div
                       className="shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg overflow-auto"
-                      style={{ padding: "1px", height: "90%" }}
+                      style={{ padding: "1px", height: "60%" }}
                     >
                       <table
                         style={{ width: "100%", borderCollapse: "collapse" }}
@@ -752,6 +980,16 @@ const DataConnection = () => {
                           </tbody>
                         </table>
                       </div>
+                      {/* <div
+                        style={{
+                          width: "100%",
+                          margin: "2rem auto",
+                          height: "200px",
+                        }}
+                        ref={chartRef4}
+                      >
+                        <ForecastGraph1 data={csvResult} />
+                      </div> */}
                     </div>
                   </div>
                 )}
@@ -759,7 +997,8 @@ const DataConnection = () => {
                 {/* Result Tab */}
                 {!loading &&
                   activeButton === "Result" &&
-                  graphData1.length > 0 && (
+                  graphData1.length > 0 &&
+                  selectedview === "Index" && (
                     <div
                       className="shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg overflow-x-auto"
                       style={{ padding: "10px", height: "60%" }}
@@ -772,7 +1011,7 @@ const DataConnection = () => {
                         }}
                         ref={chartRef1}
                       >
-                        <p className="text-center">Example {inputValue1}</p>
+                        <p className="text-center">Example {graphLabel1}</p>
                         <LineGraph1 data={graphData1} />
                       </div>
                       <div
@@ -783,7 +1022,7 @@ const DataConnection = () => {
                         }}
                         ref={chartRef2}
                       >
-                        <p className="text-center">Example {inputValue2}</p>
+                        <p className="text-center">Example {graphLabel2}</p>
                         <LineGraph1 data={graphData2} />
                       </div>
                       <div
@@ -794,8 +1033,29 @@ const DataConnection = () => {
                         }}
                         ref={chartRef3}
                       >
-                        <p className="text-center">Example {inputValue3}</p>
+                        <p className="text-center">Example {graphLabel3}</p>
                         <LineGraph1 data={graphData3} />
+                      </div>
+                    </div>
+                  )}
+                {!loading &&
+                  activeButton === "Result" &&
+                  graphData4.length > 0 &&
+                  selectedview === "Date" && (
+                    <div
+                      className="shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg overflow-x-auto"
+                      style={{ padding: "10px", height: "60%" }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          margin: "2rem auto",
+                          height: "200px",
+                        }}
+                        ref={chartRef1}
+                      >
+                        <p className="text-center">Example {graphLabel4}</p>
+                        <LineGraph1 data={graphData4} />
                       </div>
                     </div>
                   )}

@@ -3,6 +3,7 @@ import { useStateContext } from "../contexts/ContextProvider";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import eye icons from react-icons
 import "./Login.css";
 import center from "../assets/Center.png";
+import { Input } from "postcss";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,12 +18,38 @@ export default function Login() {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
 
-  const handleLogin=(e) =>{
+  const handleLogin=async(e) =>{
 		
 		e.preventDefault();
-      localStorage.setItem("login", "true");
+  
+      try{
+        const response = await fetch("http://127.0.0.1:5000/api/login", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        body: JSON.stringify({
+  username: input.email,
+  password: input.password
+}),
+
+        });
+ 
+        const data = await response.json();
+        console.log("sssss",data.message)
+        if (data.message === 'Login successful!') {
+         
+          
+              localStorage.setItem("login", "true");
       setMainPage(true);
       setlogin1(true);
+        } else {
+          alert("Invalid Credentials")
+        }
+      } catch (err) {
+        setMessage('Error connecting to server.');
+      }
+  
     
   };
 

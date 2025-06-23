@@ -35,10 +35,11 @@
   font-size: 20px;
   color: #333;
   height:100vh; /* Custom height */
- margin-left: -1%;
-  overflow-x: scroll;
+  margin-left: 5%;
+  width: 110%;
+  /* overflow-x: scroll; */
  /* Hide content if it overflows the height */
-  
+  text-overflow: ellipsis; /* Add ellipsis for long text */
   white-space: nowrap; /* Prevent wrapping */
 }
  .home-button {
@@ -147,4 +148,16 @@
   cursor: pointer;
   width:200px
 }
+.main-page-dropdown {
+  border: 1.5px solid #d3d3d3;
+  border-radius: 4px;
+  padding: 6px 12px;
+  background: #fff;
+  height: 47px;
+}
 
+.main-page-dropdown:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #d3d3d3; /* Optional: keep the same border color on focus */
+}

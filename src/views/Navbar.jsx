@@ -4,16 +4,19 @@ import { Link, NavLink, useNavigate, Navigate } from "react-router-dom";
 
 import { useStateContext } from "../contexts/ContextProvider";
 import nttlogo from "../assets/nttdatalogo.svg";
-
+import { clearHistory } from '../utils/historyDb';
 import "./navbar.css";
 
 const Navbar = () => {
   const { mainPage, setMainPage, setlogin1 } = useStateContext();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    localStorage.removeItem('csv_history'); // remove CSV history
+    await clearHistory();
     setlogin1(false); // Set login state to false
     navigate("/"); // Navigate to the root path
+    window.location.reload(); // This will refresh the entire app
   };
   return (
     <div>
