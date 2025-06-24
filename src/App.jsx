@@ -13,13 +13,7 @@ function App() {
   localStorage.removeItem("login");
   const { mainPage, login1, setlogin1 } = useStateContext();
   
-  // const [history, setHistory] = useState([]);
-
-  // const [history, setHistory] = useState([
-  //   { sessionName: 'Session 1', files: [{ name: 'test1.csv' }] },
-  //   { sessionName: 'Session 2', files: [{ name: 'test2.csv' }] }
-  // ]);
-
+ 
   return (
     <div>
       <BrowserRouter

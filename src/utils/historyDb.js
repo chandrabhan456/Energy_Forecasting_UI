@@ -1,4 +1,5 @@
 import { openDB } from 'idb';
+
 const DB_NAME = 'csvHistoryDB';
 const STORE_NAME = 'history';
 
@@ -34,5 +35,17 @@ export async function getSessionById(id) {
 
 export async function updateSessionInDb(session) {
   const db = await getDb();
-  return db.put(STORE_NAME, session); // This overwrites the session with the same id
+  return db.put(STORE_NAME, session); // Overwrites session with same id
+}
+
+// NEW: Update just the sessionName
+export async function updateSessionNameInDb(id, newName) {
+  const db = await getDb();
+  const session = await db.get(STORE_NAME, id);
+  if (session) {
+    session.sessionName = newName;
+    await db.put(STORE_NAME, session);
+    return true;
+  }
+  return false;
 }

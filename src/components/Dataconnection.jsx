@@ -9,14 +9,18 @@ import ForecastGraph1 from "./Graphs/ForecastGraph1";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useStateContext } from "../contexts/ContextProvider";
-import { updateSessionInDb } from "../utils/historyDb";
+import { updateSessionInDb, addHistoryItem } from "../utils/historyDb";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 const dummyData = ["Index", "Date"];
 const headers = ["#", "Metric", "Value"];
 const columnWidths = [15, 70, 70]; // Only 3 columns, so only 0,1,2 used
-
+const modelOptions = [
+  { value: "TinyTimeMixerForPrediction", label: "TinyTimeMixerForPrediction" },
+  { value: "XGBoost", label: "XGBoost" },
+  { value: "Prophet", label: "Prophet" },
+];
 const DataConnection = () => {
   // State to manage selected options
   const {
@@ -28,7 +32,7 @@ const DataConnection = () => {
     activeSessionName,
     setActiveSessionName,
   } = useStateContext();
-  const { addHistory } = useStateContext();
+  const [selectedModel, setSelectedModel] = useState(modelOptions[0].value);
   const [inputValue1, setInputValue1] = useState("5000");
   const [hourValue, sethourValue] = useState("22");
   const [inputValue2, setInputValue2] = useState("5325");
@@ -83,6 +87,10 @@ const DataConnection = () => {
   const chartRef4 = useRef();
   const minDate = new Date(2018, 2, 1); // March 1, 2018
   const maxDate = new Date(2022, 2, 31); // March 31, 2022
+  const [buttoon1, setButton1] = useState("");
+  const handleChange = (e) => {
+    setSelectedModel(e.target.value);
+  };
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -114,6 +122,7 @@ const DataConnection = () => {
 
     // Clear input to allow re-uploading the same file
     event.target.value = null;
+    setButton1("1");
   };
 
   // Remove the file
@@ -218,20 +227,23 @@ const DataConnection = () => {
       };
 
       // Append to React state history
-      setHistory((prev) => [...prev, newSession]);
+      const newId = await addHistoryItem(newSession); // newId will be 1, 2, 3, etc.
+
+      setHistory((prev) => [...prev, { ...newSession, id: newId }]);
       setActiveSessionName(newSession.sessionName);
-      
+
       // Add to IndexedDB (assuming addHistory handles this)
-      await addHistory(newSession);
+      //await addHistory(newSession);
     } catch (error) {
       console.error("Error uploading file:", error);
       setErrMessage(`Error uploading file: ${error.message}`);
     } finally {
       setIsLoading(false);
       setActiveButton("");
+      setButton1("2");
     }
   };
-useEffect(() => {
+  useEffect(() => {
     console.log("activeSessionName changed:", activeSessionName);
   }, [activeSessionName]);
   function formatDate(date) {
@@ -310,6 +322,7 @@ useEffect(() => {
       console.error("Error fetching image:", error);
     } finally {
       setLoading(false);
+      setButton1("3");
     }
   };
   const handleShowForecast = () => {
@@ -360,10 +373,9 @@ useEffect(() => {
           setHistory((prevHistory) => {
             if (prevHistory.length === 0) return prevHistory;
 
-            // Find the session by name (or by another unique property)
-            const targetSessionName = activeSessionName; // <-- set this dynamically as needed
+            // Use the active session name to update the relevant session
             const newHistory = prevHistory.map((session) => {
-              if (session.sessionName !== targetSessionName) {
+              if (session.sessionName !== activeSessionName) {
                 return session; // Leave other sessions unchanged
               }
 
@@ -637,182 +649,194 @@ useEffect(() => {
                     Supported: .csv, .xls, .xlsx
                   </div> */}
                 </label>
-                <div className="items-center">
-                  {csvActive && (
-                    <>
-                      <div className="  mt-2">
-                        {csvFile && (
-                          <div className="  ml-16">
-                            {console.log("ramm", csvFiles)}
-                            <div>
-                              {csvFile && (
-                                <div className="flex items-center mb-2">
-                                  {csvFile.type && (
-                                    <RiFileExcel2Fill
-                                      style={{
-                                        color: "green",
-                                        marginTop: "4px",
-                                        marginRight: "8px",
-                                        width: "24px",
-                                      }}
-                                    />
-                                  )}
-                                  <p
-                                    className="truncate dark:text-[#d3d3d3] text-black mr-2"
-                                    style={{
-                                      cursor: "pointer",
-                                      overflow: "hidden",
-                                      whiteSpace: "nowrap",
-                                      textOverflow: "ellipsis",
-                                      margin: "0",
-                                    }}
-                                  >
-                                    {csvFile.name}
-                                  </p>
-                                  <button
-                                    className="ml-1 text-center text-white bg-blue-500 border border-blue-700 rounded px-2"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() =>
-                                      handleCsvClick(csvFile.fileObject)
-                                    }
-                                  >
-                                    Preview
-                                  </button>
-                                  <button
-                                    className="ml-1 text-left text-white bg-red-300 border border-red-300 rounded px-2"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => handleCsvRemove(csvFile)}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                            <div className="mt-2 flex space-x-2 whitespace-nowrap">
-                              {/* Button and Status */}
-                              {!forecast && (
-                                <>
-                                  <button
-                                    className={`text-lg px-4 py-2 border rounded ${
-                                      activeButton === "Upload"
-                                        ? "bg-blue-500 border-blue-800 text-white"
-                                        : "bg-white border-gray-300 text-black"
-                                    } `}
-                                    onClick={handleUpload}
-                                  >
-                                    Upload File
-                                  </button>
+              </div>
+              <div className="ml-[8%]">
+                {csvActive && (
+                  <>
+                    <div className="mt-1">
+                      {csvFile && (
+                        <div className="  ml-16">
+                          {console.log("ramm", csvFiles)}
+                          <div>
+                            {csvFile && (
+                              <div className="flex items-center m-0">
+                                <RiFileExcel2Fill
+                                  style={{
+                                    color: "green",
+                                    marginTop: "4px",
+                                    marginRight: "8px",
+                                    width: "24px",
+                                  }}
+                                />
 
-                                  <button
-                                    className={`text-lg px-4 py-2 border rounded ${
-                                      activeButton === "Graph"
-                                        ? "bg-blue-500 border-blue-800 text-white"
-                                        : "bg-white border-gray-300 text-black"
-                                    } `}
-                                    onClick={handleGenerateForecast}
-                                  >
-                                    Generate Forecast
-                                  </button>
-                                  <button className="text-lg px-4 py-2 w-32 cursor-default"></button>
-                                </>
-                              )}
-                              {forecast && (
-                                <>
-                                  <div className="flex space-x-2 mt-4">
-                                    {/* Input Box 1 */}
-                                    <select
-                                      value={selectedview}
-                                      onChange={(e) =>
-                                        setSelectedView(e.target.value)
-                                      }
-                                      className="main-page-dropdown w-32"
-                                      style={{ marginRight: "10px" }}
+                                <p
+                                  className="truncate dark:text-[#d3d3d3] text-black mr-2"
+                                  style={{
+                                    cursor: "pointer",
+                                    overflow: "hidden",
+                                    whiteSpace: "nowrap",
+                                    textOverflow: "ellipsis",
+                                    margin: "0",
+                                  }}
+                                >
+                                  {csvFile.name}
+                                </p>
+                                <button
+                                  className="ml-1 text-center text-white bg-blue-500 border border-blue-700 rounded px-2"
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() =>
+                                    handleCsvClick(csvFile.fileObject)
+                                  }
+                                >
+                                  Preview
+                                </button>
+                                <button
+                                  className="ml-1 text-left text-white bg-red-300 border border-red-300 rounded px-2"
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() => handleCsvRemove(csvFile)}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="mt-2 flex space-x-2 whitespace-nowrap">
+                            {/* Button and Status */}
+                            {buttoon1 === "1" && (
+                              <>
+                                <button
+                                  className={`fancy-3d-btn h-12`}
+                                  onClick={handleUpload}
+                                  disabled={activeButton === "Upload"}
+                                >
+                                  {activeButton === "Upload"
+                                    ? "Processing..."
+                                    : "Upload File"}
+                                </button>
+                              </>
+                            )}
+                            {buttoon1 === "2" && (
+                              <div className="flex gap-2">
+                                <select
+                                  id="model-select"
+                                  value={selectedModel}
+                                  onChange={handleChange}
+                                  className="main-page-dropdown"
+                                >
+                                  {modelOptions.map((option) => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
                                     >
-                                      {dummyData.map((item) => (
-                                        <option key={item} value={item}>
-                                          {item}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {selectedview === "Index" ? (
-                                      <>
-                                        {/* Input Box 1 */}
-                                        <input
-                                          type="text"
-                                          value={inputValue1}
-                                          onChange={(e) =>
-                                            setInputValue1(e.target.value)
-                                          }
-                                          className="border w-24 rounded px-2 py-1"
-                                          placeholder="Enter value 1"
-                                        />
-
-                                        {/* Input Box 2 */}
-                                        <input
-                                          type="text"
-                                          value={inputValue2}
-                                          onChange={(e) =>
-                                            setInputValue2(e.target.value)
-                                          }
-                                          className="border w-24 rounded px-2 py-1"
-                                          placeholder="Enter value 2"
-                                        />
-
-                                        {/* Input Box 3 */}
-                                        <input
-                                          type="text"
-                                          value={inputValue3}
-                                          onChange={(e) =>
-                                            setInputValue3(e.target.value)
-                                          }
-                                          className="border w-24 rounded px-2 py-1"
-                                          placeholder="Enter value 3"
-                                        />
-                                      </>
-                                    ) : (
-                                      <>
-                                        <DatePicker
-                                          selected={dateValue}
-                                          onChange={(date) =>
-                                            setDateValue(date)
-                                          }
-                                          className="border w-32 rounded px-2 py-1 h-12"
-                                          placeholderText="Select date"
-                                          dateFormat="yyyy-MM-dd"
-                                          minDate={minDate}
-                                          maxDate={maxDate}
-                                          openToDate={minDate} // <-- This line makes calendar open at minDate
-                                          showMonthYearPicker={false} // Optional: true if you want month-year only
-                                        />
-                                        <input
-                                          type="text"
-                                          value={hourValue}
-                                          onChange={(e) =>
-                                            sethourValue(e.target.value)
-                                          }
-                                          className="border w-24 rounded px-2 py-1"
-                                          placeholder="Enter value 1"
-                                        />
-                                      </>
-                                    )}
-
-                                    {/* Show Results Button */}
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
                                     <button
-                                      className={`text-lg px-4 py-2 border rounded ${
-                                        activeButton === "Result"
-                                          ? "bg-blue-500 border-blue-800 text-white"
-                                          : "bg-white border-gray-300 text-black"
-                                      } `}
-                                      onClick={() => {
-                                        setActiveButton("Result");
-                                        handleEvaluationMetrix();
-                                      }}
-                                    >
-                                      Show Results
+                                  className={`fancy-3d-btn h-12`}
+                                  onClick={handleGenerateForecast}
+                                  disabled={activeButton === "Graph"}
+                                >
+                                  {activeButton === "Graph"
+                                    ? "Processing..."
+                                    : "Generate Forecast"}
+                                </button>
+                               </div>
+                            )}
+                            {buttoon1 === "3" && (
+                              <>
+                                <div className="flex space-x-2 mt-4">
+                                  {/* Input Box 1 */}
+                                  <select
+                                    value={selectedview}
+                                    onChange={(e) =>
+                                      setSelectedView(e.target.value)
+                                    }
+                                    className="main-page-dropdown w-32"
+                                    style={{ marginRight: "10px" }}
+                                  >
+                                    {dummyData.map((item) => (
+                                      <option key={item} value={item}>
+                                        {item}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {selectedview === "Index" ? (
+                                    <>
+                                      {/* Input Box 1 */}
+                                      <input
+                                        type="text"
+                                        value={inputValue1}
+                                        onChange={(e) =>
+                                          setInputValue1(e.target.value)
+                                        }
+                                        className="border w-24 h-12 rounded px-2 py-1"
+                                        placeholder="Enter value 1"
+                                      />
+
+                                      {/* Input Box 2 */}
+                                      <input
+                                        type="text"
+                                        value={inputValue2}
+                                        onChange={(e) =>
+                                          setInputValue2(e.target.value)
+                                        }
+                                        className="border w-24 h-12 rounded px-2 py-1"
+                                        placeholder="Enter value 2"
+                                      />
+
+                                      {/* Input Box 3 */}
+                                      <input
+                                        type="text"
+                                        value={inputValue3}
+                                        onChange={(e) =>
+                                          setInputValue3(e.target.value)
+                                        }
+                                        className="border w-24 h-12 rounded px-2 py-1"
+                                        placeholder="Enter value 3"
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <DatePicker
+                                        selected={dateValue}
+                                        onChange={(date) => setDateValue(date)}
+                                        className="border w-32 rounded px-2 py-1 h-12"
+                                        placeholderText="Select date"
+                                        dateFormat="yyyy-MM-dd"
+                                        minDate={minDate}
+                                        maxDate={maxDate}
+                                        openToDate={minDate} // <-- This line makes calendar open at minDate
+                                        showMonthYearPicker={false} // Optional: true if you want month-year only
+                                      />
+                                      <input
+                                        type="text"
+                                        value={hourValue}
+                                        onChange={(e) =>
+                                          sethourValue(e.target.value)
+                                        }
+                                        className="border w-24 h-12 rounded px-2 py-1"
+                                        placeholder="Enter value 1"
+                                      />
+                                    </>
+                                  )}
+
+                                  {/* Show Results Button */}
+                                  <button
+                                       className={`fancy-3d-btn h-12`}
+                                    onClick={() => {
+                                      setActiveButton("Result");
+                                      handleEvaluationMetrix();
+                                    }}
+                                 disabled={activeButton === "result"}
+                                >
+                                  {activeButton === "result"
+                                    ? "Processing..."
+                                    : "Result"}
                                     </button>
 
-                                    {/* Download Icon */}
-                                    <button
+                                  {/* Download Icon */}
+                                  {/* <button
                                       className={`text-lg px-4 py-2 border rounded ${
                                         activeButton === "Graph"
                                           ? "bg-blue-500 border-blue-800 text-white"
@@ -821,47 +845,47 @@ useEffect(() => {
                                       onClick={handleShowForecast}
                                     >
                                       Show Forecast
-                                    </button>
-                                    <div
-                                      className="cursor-pointer"
-                                      onClick={handleDownload}
-                                    >
-                                      {activeButton === "Result" && (
-                                        <FaDownload className="mt-3 text-blue-500" />
-                                      )}
-                                    </div>
+                                    </button> */}
+                                  <div
+                                    className="cursor-pointer"
+                                    onClick={handleDownload}
+                                  >
+                                    {activeButton === "Result" && (
+                                      <FaDownload className="mt-4 text-3xl text-blue-500" />
+                                    )}
                                   </div>
-                                </>
-                              )}
-                            </div>
-                            <div>
-                              {isLoading && (
-                                <div className="progress-bar-container mt-3">
-                                  <div className="progress-bar"></div>
                                 </div>
-                              )}
-                              {!isLoading && message && (
-                                <p
-                                  className="message-box"
-                                  style={{
-                                    overflow: "hidden", // Prevent overflowing text
-                                    whiteSpace: "nowrap", // Prevent wrapping to the next line
-                                    textOverflow: "ellipsis", // Add ellipsis for overflow
-                                    maxWidth: "98%", // Adjust the width as needed
-                                  }}
-                                >
-                                  {message}
-                                </p> // Display the success or error message
-                              )}
-                            </div>
+                              </>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
+                          <div>
+                            {buttoon1==='1' && isLoading && (
+                              <div className="progress-bar-container mt-3">
+                                <div className="progress-bar"></div>
+                              </div>
+                            )}
+                            {!isLoading && message &&buttoon1==='1' && (
+                              <p
+                                className="message-box"
+                                style={{
+                                  overflow: "hidden", // Prevent overflowing text
+                                  whiteSpace: "nowrap", // Prevent wrapping to the next line
+                                  textOverflow: "ellipsis", // Add ellipsis for overflow
+                                  maxWidth: "98%", // Adjust the width as needed
+                                }}
+                              >
+                                {message}
+                              </p> // Display the success or error message
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="pdf-info mt-10 justify-center  dark:bg-[#1e1e1e] bg-[#f7f7f7] ">
+
+              <div className="pdf-info mt-2 justify-center  dark:bg-[#1e1e1e] bg-[#f7f7f7] ">
                 {loading && activeButton === "Graph" && (
                   <p
                     className=" shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg text-center text-2xl"
@@ -932,7 +956,7 @@ useEffect(() => {
                   ))}
 
                 {/* Graph Tab */}
-                {activeButton === "Graph" && (
+                {!loading && activeButton === "Graph" && (
                   <div
                     className="shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg overflow-x-auto overflow-y-scroll"
                     style={{ padding: "10px", height: "60%" }}
