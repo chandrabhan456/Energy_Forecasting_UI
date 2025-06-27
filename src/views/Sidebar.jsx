@@ -1,4 +1,8 @@
-import { getHistory, updateSessionNameInDb,getSessionById } from "../utils/historyDb";
+import {
+  getHistory,
+  updateSessionNameInDb,
+  getSessionById,
+} from "../utils/historyDb";
 import React, { useState } from "react";
 import "./Sidebar.css";
 import Chatbot from "../assets/energy.png";
@@ -209,13 +213,24 @@ const Sidebar = () => {
                     )}
                   </div>
                   {openSessions[session.sessionName] && (
-                    <ul className="ml-4 ">
+                    <ul className="ml-4">
                       {session.files.map((file, fIdx) => (
-                        <li key={fIdx} className="text-sm flex items-center" style={{marginTop:"-10px"}}>
+                        <li
+                          key={fIdx}
+                          className="text-sm flex items-center"
+                          style={{ marginTop: "-10px" }}
+                        >
+                          {/* Determine the emoji based on the file type */}
+                          <span style={{ marginRight: "8px" }}>
+                            {file.type === "csv_document"
+                              ? "📊"
+                              : file.type === "pdf_document"
+                              ? "📄"
+                              : "📁"}
+                          </span>
                           <span className="flex-1 truncate">{file.name}</span>
-                          {!file.name
-                            .toLowerCase()
-                            .includes("forecast_results_") && (
+
+                          {file.type === "csv_document" && (
                             <button
                               className="px-1 py-1 rounded text-xs"
                               onClick={() => {
@@ -248,16 +263,34 @@ const Sidebar = () => {
                                 const file = dbSession.files[fIdx];
                                 const content = file.content || "";
 
-                                // Create a blob and trigger download
-                                const blob = new Blob([content], {
-                                  type: "text/csv",
-                                });
+                                let blob;
+                                let mimeType;
+
+                                // Determine the MIME type based on the file type
+                                if (file.type === "csv_document") {
+                                  mimeType = "text/csv";
+                                  blob = new Blob([content], {
+                                    type: mimeType,
+                                  });
+                                } else if (file.type === "pdf_document") {
+                                  mimeType = "application/pdf";
+
+                                  // Assume content is raw binary data for PDF
+                                  blob = new Blob([content], {
+                                    type: mimeType,
+                                  });
+                                } else {
+                                  alert("Unsupported file type.");
+                                  return;
+                                }
+
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement("a");
                                 a.href = url;
                                 a.download = file.name;
                                 document.body.appendChild(a);
                                 a.click();
+
                                 setTimeout(() => {
                                   URL.revokeObjectURL(url);
                                   document.body.removeChild(a);
@@ -269,6 +302,7 @@ const Sidebar = () => {
                           >
                             ⬇️
                           </button>
+
                           <button
                             className="px-1 py-1 rounded text-xs"
                             onClick={async (e) => {
@@ -292,10 +326,9 @@ const Sidebar = () => {
                                 // Open new tab
                                 const newWindow = window.open();
                                 if (newWindow) {
-                                  const isCSV = file.name.endsWith(".csv");
                                   let html;
-                                  if (isCSV) {
-                                    // Limit to first 1000 rows
+                                  if (file.type === "csv_document") {
+                                    // Display CSV content in table format
                                     const rowLimit = 1000;
                                     const allRows = content.trim().split("\n");
                                     const limitedRows = allRows
@@ -303,65 +336,66 @@ const Sidebar = () => {
                                       .map((row) => row.split(","));
                                     const totalRows = allRows.length;
                                     html = `
-                              <html>
-                                <head>
-                                  <title>${file.name}</title>
-                                  <style>
-                                    body { font-family: Arial; padding: 24px; }
-                                    table { border-collapse: collapse; width: 100%; }
-                                    td, th { border: 1px solid #ccc; padding: 6px 12px; }
-                                    th { background: #eee; }
-                                  </style>
-                                </head>
-                                <body>
-                                  <h2>${file.name}</h2>
-                                  <table>
+                    <html>
+                      <head>
+                        <title>${file.name}</title>
+                        <style>
+                          body { font-family: Arial; padding: 24px; }
+                          table { border-collapse: collapse; width: 100%; }
+                          td, th { border: 1px solid #ccc; padding: 6px 12px; }
+                          th { background: #eee; }
+                        </style>
+                      </head>
+                      <body>
+                        <h2>${file.name}</h2>
+                        <table>
 
 
-                                    ${limitedRows
-                                      .map(
-                                        (row, i) =>
-                                          `<tr>${row
-                                            .map(
-                                              (cell) =>
-                                                `<${
-                                                  i === 0 ? "th" : "td"
-                                                }>${cell}</${
-                                                  i === 0 ? "th" : "td"
-                                                }>`
-                                            )
-                                            .join("")}</tr>`
-                                      )
-                                      .join("")}
-                                  </table>
+                          ${limitedRows
+                            .map(
+                              (row, i) =>
+                                `<tr>${row
+                                  .map(
+                                    (cell) =>
+                                      `<${i === 0 ? "th" : "td"}>${cell}</${
+                                        i === 0 ? "th" : "td"
+                                      }>`
+                                  )
+                                  .join("")}</tr>`
+                            )
+                            .join("")}
+                        </table>
 
 
-                                  ${
-                                    totalRows > rowLimit
-                                      ? `<p style="color: red;">Showing only the first ${rowLimit} of ${totalRows} rows.</p>`
-                                      : ""
+                        ${
+                          totalRows > rowLimit
+                            ? `<p style="color: red;">Showing only the first ${rowLimit} of ${totalRows} rows.</p>`
+                            : ""
+                        }
+                      </body>
+                    </html>
+                  `;
+                                  } else if (file.type === "pdf_document") {
+                                    // Open a new tab or window
+
+                                    // Write HTML with an iframe that loads the PDF
+                                    const html = `
+                                  <html>
+                                    <head>
+                                      <title>${file.name}</title>
+                                      <style>
+                                        body { margin: 0; }
+                                        iframe { border: none; width: 100vw; height: 100vh; }
+                                      </style>
+                                    </head>
+                                    <body>
+                                      <iframe src="${file.content}" type="application/pdf"></iframe>
+                                    </body>
+                                  </html>
+                                       `;
+                                    newWindow.document.write(html);
+                                    newWindow.document.close();
                                   }
-                                </body>
-                              </html>
-                            `;
-                                  } else {
-                                    html = `
-                              <html>
-                                <head>
-                                  <title>${file.name}</title>
-                                  <style>body { font-family: Arial; padding: 24px; }</style>
-                                </head>
-                                <body>
-                                  <h2>${file.name}</h2>
-                                  <pre>${content
-                                    .replace(/</g, "&lt;")
-                                    .replace(/>/g, "&gt;")}</pre>
-                                </body>
-                              </html>
-                            `;
-                                  }
-                                  newWindow.document.write(html);
-                                  newWindow.document.close();
                                 } else {
                                   alert(
                                     "Popup blocked! Please allow popups for this site."
@@ -372,7 +406,12 @@ const Sidebar = () => {
                               }
                             }}
                           >
-                            <p className="text-2xl">👁</p>
+                            <p
+                              className="text-2xl"
+                              style={{ color: "#FF5733" }}
+                            >
+                              👁
+                            </p>
                           </button>
                         </li>
                       ))}

@@ -32,32 +32,26 @@ export default function Login() {
   username: input.email,
   password: input.password
 }),
-
         });
  
         const data = await response.json();
         console.log("sssss",data.message)
         if (data.message === 'Login successful!') {
-         
-          
-              localStorage.setItem("login", "true");
-      setMainPage(true);
-      setlogin1(true);
+            localStorage.setItem("login", "true");
+            setMainPage(true);
+            setlogin1(true);
         } else {
-          alert("Invalid Credentials")
+          alert("Invalid Credentials ⚠️")
         }
       } catch (err) {
         setMessage('Error connecting to server.');
       }
-  
-    
   };
 
   return (
     <div className="login">
-      
-    <div className='centered text-white'>
-
+    <h1 className="project-name text-nowrap">ENERGY FORECASTING</h1>
+    <div className='centered text-black'>
        <img
               src={center}
               alt="Agent Logo"

@@ -150,22 +150,23 @@
 }
 .main-page-dropdown {
   border: 1.5px solid #d3d3d3;
-  border-radius: 12px;
-  padding: 6px 12px;
-  background: #fff;
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: #ffffff;
   height: 47px;
+  width:150px;
 }
 
 .main-page-dropdown:focus {
   outline: none;
   box-shadow: none;
-  border-color: #d3d3d3; /* Optional: keep the same border color on focus */
+  border-color: #0051ff; /* Optional: keep the same border color on focus */
 }
 .fancy-3d-btn {
-  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 130%);
   color: #fff;
   border: 2px solid #2563eb;
-  border-radius: 12px;
+  border-radius: 7px;
   box-shadow: 0 6px 18px 0 rgba(37, 99, 235, 0.25), 0 2px 4px 0 #2563eb;
   padding: 0.6rem 1.6rem;
   font-size: 1.2rem;
@@ -198,4 +199,88 @@
   cursor: not-allowed;
   transform: none !important;
   opacity: 1 !important;
+}
+/* Apply a distinct style to make it stand out */
+.date-picker-input {
+    border: 1px solid #d4d4d4; /* Strong border color for better visibility */
+    width: 180px; /* Adjust width as needed */
+    border-radius: 7px; /* Rounded corners for a smoother look */
+    padding: 10px 12px; /* Adequate padding for better usability */
+    height: 48px; /* Consistent height */
+    font-size: 16px; /* Slightly larger font size for readability */
+    cursor: pointer; /* Pointer cursor to indicate interactivity */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Smooth transition for border and shadow */
+}
+
+/* Change border color on focus for better UX */
+.date-picker-input:focus {
+    border-color: #0051ff; /* Darker border on focus for clear interaction */
+    box-shadow: 0 0 5px rgba(0, 86, 179, 0.5); /* Subtle shadow effect */
+    outline: none; /* Remove default outline */
+}
+
+/* Placeholder styling with better visibility */
+.date-picker-input::placeholder {
+    color: #555555; /* Darker placeholder color for better visibility */
+    opacity: 1; /* Full opacity for clear text */
+    font-weight: 500; /* Slightly bolder text for emphasis */
+}
+
+/* Disabled state styling */
+.date-picker-input:disabled {
+    background-color: #e9ecef; /* Light background for disabled state */
+    cursor: not-allowed; /* Not-allowed cursor */
+}
+
+/* Calendar icon styling (if using an icon) */
+.date-picker-icon {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Let clicks pass through to the input */
+    color: #007BFF; /* Icon color */
+}
+
+/* Container for position relative to allow absolute positioning of icon */
+.date-picker-container {
+    position: relative;
+    display: inline-block;
+}
+/* Override Flatpickr header to light blue */
+.flatpickr-calendar .flatpickr-months {
+  background: #90caf9 !important;  /* Light blue */
+}
+
+/* Optional: Change arrow and label color for contrast */
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-next-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-current-month {
+  color: #fff !important;  /* White text/arrows */
+}
+.scroll-table-container {
+  max-height: 300px;
+  overflow: auto;
+  margin: 20px auto;
+  width: 80%;
+}
+.nice-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.nice-table th {
+  background: #90caf9;
+  color: #000000;
+  font-weight: bold;
+  font-size: 1rem;
+  border: 2px solid #64b5f6;
+  padding: 7px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.nice-table td {
+  border: 1px solid #bbb;
+  padding: 7px 12px;
 }
