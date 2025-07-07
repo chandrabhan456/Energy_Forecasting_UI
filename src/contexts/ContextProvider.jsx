@@ -27,7 +27,7 @@ export const ContextProvider = ({ children }) => {
   const [activeSessionName, setActiveSessionName] = useState(null);
   // CSV history state (now using IndexedDB)
   const [history, setHistory] = useState([]);
-
+  const [selectedModel1,setSelectedModel1] = useState('')
   // Load history from IndexedDB on mount
   useEffect(() => {
     getHistory().then(setHistory);
@@ -58,6 +58,8 @@ export const ContextProvider = ({ children }) => {
     <StateContext.Provider
       value={{
         login1,
+        selectedModel1,
+        setSelectedModel1,
         setlogin1,
         activeHistory,
         setActiveHistory,

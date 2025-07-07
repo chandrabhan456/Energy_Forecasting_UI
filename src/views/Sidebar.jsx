@@ -229,7 +229,7 @@ const Sidebar = () => {
                               : "📁"}
                           </span>
                           <span className="flex-1 truncate">{file.name}</span>
-
+                          {console.log("dile", file)}
                           {file.type === "csv_document" && (
                             <button
                               className="px-1 py-1 rounded text-xs"
@@ -265,20 +265,59 @@ const Sidebar = () => {
 
                                 let blob;
                                 let mimeType;
-
+                                console.log("slasla", content);
                                 // Determine the MIME type based on the file type
                                 if (file.type === "csv_document") {
                                   mimeType = "text/csv";
                                   blob = new Blob([content], {
                                     type: mimeType,
                                   });
-                                } else if (file.type === "pdf_document") {
+                                }
+
+                                if (file.type === "pdf_document") {
                                   mimeType = "application/pdf";
 
-                                  // Assume content is raw binary data for PDF
-                                  blob = new Blob([content], {
-                                    type: mimeType,
-                                  });
+                                  // Remove the data URL prefix if present
+                                  const base64Content = content.split(",")[1];
+
+                                  // Check if content is base64
+                                  const isBase64 = /^[A-Za-z0-9+/=]+$/.test(
+                                    base64Content.trim()
+                                  );
+
+                                  if (isBase64) {
+                                    const byteCharacters = atob(base64Content);
+                                    const byteNumbers = new Array(
+                                      byteCharacters.length
+                                    )
+                                      .fill(0)
+                                      .map((_, i) =>
+                                        byteCharacters.charCodeAt(i)
+                                      );
+                                    const byteArray = new Uint8Array(
+                                      byteNumbers
+                                    );
+
+                                    blob = new Blob([byteArray], {
+                                      type: mimeType,
+                                    });
+                                  } else {
+                                    // Assume raw binary (if not base64)
+                                    blob = new Blob([base64Content], {
+                                      type: mimeType,
+                                    });
+                                  }
+
+                                  // Create a URL for the blob and display it
+                                  const url = URL.createObjectURL(blob);
+
+                                  // Example usage with an <iframe>
+                                  const iframe =
+                                    document.createElement("iframe");
+                                  iframe.src = url;
+                                  iframe.width = "100%";
+                                  iframe.height = "600px";
+                                  document.body.appendChild(iframe);
                                 } else {
                                   alert("Unsupported file type.");
                                   return;
@@ -326,76 +365,88 @@ const Sidebar = () => {
                                 // Open new tab
                                 const newWindow = window.open();
                                 if (newWindow) {
-                                  let html;
+                                  let html = "";
+
                                   if (file.type === "csv_document") {
-                                    // Display CSV content in table format
                                     const rowLimit = 1000;
                                     const allRows = content.trim().split("\n");
+
+                                    const escapeHTML = (str) =>
+                                      str
+                                        .replace(/&/g, "&amp;")
+                                        .replace(/</g, "&lt;")
+                                        .replace(/>/g, "&gt;");
+
                                     const limitedRows = allRows
                                       .slice(0, rowLimit)
-                                      .map((row) => row.split(","));
+                                      .map((row) =>
+                                        row.split(",").map(escapeHTML)
+                                      );
+
                                     const totalRows = allRows.length;
+
                                     html = `
-                    <html>
-                      <head>
-                        <title>${file.name}</title>
-                        <style>
-                          body { font-family: Arial; padding: 24px; }
-                          table { border-collapse: collapse; width: 100%; }
-                          td, th { border: 1px solid #ccc; padding: 6px 12px; }
-                          th { background: #eee; }
-                        </style>
-                      </head>
-                      <body>
-                        <h2>${file.name}</h2>
-                        <table>
-
-
-                          ${limitedRows
-                            .map(
-                              (row, i) =>
-                                `<tr>${row
-                                  .map(
-                                    (cell) =>
-                                      `<${i === 0 ? "th" : "td"}>${cell}</${
-                                        i === 0 ? "th" : "td"
-                                      }>`
-                                  )
-                                  .join("")}</tr>`
-                            )
-                            .join("")}
-                        </table>
-
-
-                        ${
-                          totalRows > rowLimit
-                            ? `<p style="color: red;">Showing only the first ${rowLimit} of ${totalRows} rows.</p>`
-                            : ""
-                        }
-                      </body>
-                    </html>
-                  `;
+                                              <html>
+                                                <head>
+                                                  <title>${file.name}</title>
+                                                  <style>
+                                                    body { font-family: Arial; padding: 24px; }
+                                                    table { border-collapse: collapse; width: 100%; }
+                                                    td, th { border: 1px solid #ccc; padding: 6px 12px; }
+                                                    th { background: #eee; }
+                                                  </style>
+                                                </head>
+                                                <body>
+                                                  <h2>${file.name}</h2>
+                                                  <table>
+                                                    ${limitedRows
+                                                      .map(
+                                                        (row, i) =>
+                                                          `<tr>${row
+                                                            .map(
+                                                              (cell) =>
+                                                                `<${
+                                                                  i === 0
+                                                                    ? "th"
+                                                                    : "td"
+                                                                }>${cell}</${
+                                                                  i === 0
+                                                                    ? "th"
+                                                                    : "td"
+                                                                }>`
+                                                            )
+                                                            .join("")}</tr>`
+                                                      )
+                                                      .join("")}
+                                                  </table>
+                                                  ${
+                                                    totalRows > rowLimit
+                                                      ? `<p style="color: red;">Showing only the first ${rowLimit} of ${totalRows} rows.</p>`
+                                                      : ""
+                                                  }
+                                                </body>
+                                              </html>
+                                            `;
                                   } else if (file.type === "pdf_document") {
-                                    // Open a new tab or window
-
-                                    // Write HTML with an iframe that loads the PDF
-                                    const html = `
-                                  <html>
-                                    <head>
-                                      <title>${file.name}</title>
-                                      <style>
-                                        body { margin: 0; }
-                                        iframe { border: none; width: 100vw; height: 100vh; }
-                                      </style>
-                                    </head>
-                                    <body>
-                                      <iframe src="${file.content}" type="application/pdf"></iframe>
-                                    </body>
-                                  </html>
-                                       `;
-                                    newWindow.document.write(html);
-                                    newWindow.document.close();
+                                    html = `
+                                    <html>
+                                      <head>
+                                        <title>${file.name}</title>
+                                        <style>
+                                          body { margin: 0; }
+                                          iframe { border: none; width: 100vw; height: 100vh; }
+                                        </style>
+                                      </head>
+                                      <body>
+                                        <iframe src="${file.content}" type="application/pdf"></iframe>
+                                      </body>
+                                    </html>
+                                  `;
                                   }
+
+                                  newWindow.document.open();
+                                  newWindow.document.write(html);
+                                  newWindow.document.close();
                                 } else {
                                   alert(
                                     "Popup blocked! Please allow popups for this site."

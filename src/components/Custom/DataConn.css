@@ -1,0 +1,355 @@
+.upload-container {
+    width: 99%;
+    height: 75px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background-color: white;
+    cursor: pointer;
+    
+}
+
+.hidden-input {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.drag-label {
+    font-size: 18px;
+    color: #555;
+    text-align: center;
+    pointer-events: none;
+}
+
+.file-info {
+ 
+  text-align: center;
+  font-size: 20px;
+  color: #333;
+  height:100vh; /* Custom height */
+  margin-left: 5%;
+  width: 110%;
+  /* overflow-x: scroll; */
+ /* Hide content if it overflows the height */
+  text-overflow: ellipsis; /* Add ellipsis for long text */
+  white-space: nowrap; /* Prevent wrapping */
+}
+ .home-button {
+    background: linear-gradient(45deg, #007bff, #00d4ff);
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    width: 160px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .home-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .home-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .progress-bar-container {
+  position: relative;
+  width: 50%;
+  height: 10px; /* Adjust height as needed */
+  background-color: #f0f0f0; /* Background for the container */
+  overflow: hidden;
+  border-radius: 5px; /* Optional: rounded corners */
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: -100%; /* Start from outside the container */
+  width: 30%; /* Width of the animated bar */
+  height: 100%;
+  background-color: green; /* Bar color */
+  border-radius: 5px; /* Match container's rounding */
+  animation: progressMove 2s linear infinite; /* Animation */
+}
+
+/* Animation keyframes */
+@keyframes progressMove {
+  0% {
+    left: -30%; /* Start outside on the left */
+  }
+  50% {
+    left: 50%; /* Reach the center */
+  }
+  100% {
+    left: 100%; /* Move outside to the right */
+  }
+}
+
+
+.message-box {
+ 
+
+  color: #155724; /* Dark green text */
+ 
+  font-size: 16px;
+  text-align: left;
+}
+.pdf-info {
+  margin-top: 10px;
+  padding: 10px;
+  
+  border-radius: 5px;
+  background-color: white;
+  text-align: center;
+  font-size: 15px;
+  color: #333;
+  width:80%;
+  height: 100vh; /* Custom height */
+  overflow-y: scroll;
+
+}
+.pdf-container {
+  height: 98vh; /* Adjust the height as needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+  border: 1px solid #ccc; /* Optional: Add a border for better visualization */
+}
+.item-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+ 
+  padding: 16px;
+  border-radius: 8px;
+  width: 40%;
+}
+
+.custom-btn {
+  margin-bottom: 10px;
+  padding: 8px 8px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  width:200px
+}
+.main-page-dropdown {
+  border: 1.5px solid #d3d3d3;
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: #ffffff;
+  height: 50px;
+  width:150px;
+}
+
+.main-page-dropdown:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #0051ff; /* Optional: keep the same border color on focus */
+}
+.fancy-3d-btn {
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 130%);
+  color: #fff;
+  border: 2px solid #2563eb;
+  border-radius: 7px;
+ 
+  padding: 0.6rem 1.6rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: 
+    box-shadow 0.2s cubic-bezier(.21,.6,.41,1.02),
+    transform 0.12s cubic-bezier(.21,.6,.41,1.02),
+    background 0.25s;
+}
+
+.fancy-3d-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+ 
+  transform: translateY(-2px) scale(1.03);
+}
+
+.fancy-3d-btn:active:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+
+  transform: translateY(1px) scale(0.98);
+}
+
+.fancy-3d-btn:disabled {
+  background: #3b82f6 !important;
+  color: #fff !important;
+  border: 2px solid #1e3a8a !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+  transform: none !important;
+  opacity: 1 !important;
+}
+/* Apply a distinct style to make it stand out */
+.date-picker-input {
+    border: 1px solid #d4d4d4; /* Strong border color for better visibility */
+    width: 180px; /* Adjust width as needed */
+    border-radius: 7px; /* Rounded corners for a smoother look */
+    padding: 10px 12px; /* Adequate padding for better usability */
+    height: 48px; /* Consistent height */
+    font-size: 16px; /* Slightly larger font size for readability */
+    cursor: pointer; /* Pointer cursor to indicate interactivity */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Smooth transition for border and shadow */
+}
+
+/* Change border color on focus for better UX */
+.date-picker-input:focus {
+    border-color: #0051ff; /* Darker border on focus for clear interaction */
+    box-shadow: 0 0 5px rgba(0, 86, 179, 0.5); /* Subtle shadow effect */
+    outline: none; /* Remove default outline */
+}
+
+/* Placeholder styling with better visibility */
+.date-picker-input::placeholder {
+    color: #555555; /* Darker placeholder color for better visibility */
+    opacity: 1; /* Full opacity for clear text */
+    font-weight: 500; /* Slightly bolder text for emphasis */
+}
+
+/* Disabled state styling */
+.date-picker-input:disabled {
+    background-color: #e9ecef; /* Light background for disabled state */
+    cursor: not-allowed; /* Not-allowed cursor */
+}
+
+/* Calendar icon styling (if using an icon) */
+.date-picker-icon {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Let clicks pass through to the input */
+    color: #007BFF; /* Icon color */
+}
+
+/* Container for position relative to allow absolute positioning of icon */
+.date-picker-container {
+    position: relative;
+    display: inline-block;
+}
+/* Override Flatpickr header to light blue */
+.flatpickr-calendar .flatpickr-months {
+  background: #90caf9 !important;  /* Light blue */
+}
+
+/* Optional: Change arrow and label color for contrast */
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-next-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-current-month {
+  color: #fff !important;  /* White text/arrows */
+}
+.scroll-table-container {
+  max-height: 800px;
+  overflow: auto;
+  margin: 20px auto;
+  width: 80%;
+}
+.nice-table {
+  
+  border-collapse: collapse;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.nice-table th {
+  background: #90caf9;
+  color: #000000;
+  font-weight: bold;
+  font-size: 1rem;
+  border: 2px solid #64b5f6;
+  padding: 7px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.nice-table td {
+  border: 1px solid #bbb;
+  padding: 7px 12px;
+}.main-page-container {
+  margin-top: 4%;
+  padding: 20px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.main-page-button {
+  background-color: #f0f0f0; /* Default background color for inactive buttons */
+  color: black; /* Text color for inactive buttons */
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  width: 100px; /* Fixed width for buttons */
+  text-align: center; /* Center text */
+}
+
+.main-page-button:hover {
+  background-color: #e0e0e0; /* Slightly darker shade for hover effect */
+}
+
+.main-page-button.active {
+  background-color: #007BFF; /* Blue background for the active button */
+  color: white; /* White text color for the active button */
+}
+
+.shadow-container {
+  box-shadow: 0 0 24px 4px rgba(0, 0, 255, 0.2);
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: scroll;
+  padding: 10px;
+  height: 60%;
+}
+
+.text-content {
+  text-align: left;
+  margin-left: 10%;
+}
+
+.text-content p {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.text-content p strong {
+  font-size: 24px;
+  color: black;
+}
+
+.graph-image {
+  text-align: center;
+  margin: 2rem auto;
+  width: 100%;
+}
+
+.graph-image img {
+  width: 100%;
+  max-width: 750px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}

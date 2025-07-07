@@ -4,16 +4,19 @@ import Login from "./views/Login";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar, Sidebar } from "./views";
 import { useStateContext } from "./contexts/ContextProvider.jsx";
-import { DataPage } from "./components";
-import FileViewer from "./views/FileViewer.jsx";
-
+import {
+  DataPage,
+  Result,
+  MainPage,
+  ValidationPage,
+  Result2,
+} from "./components";
 
 function App() {
   localStorage.setItem("OpenAI_Configuration", true);
   localStorage.removeItem("login");
   const { mainPage, login1, setlogin1 } = useStateContext();
-  
- 
+
   return (
     <div>
       <BrowserRouter
@@ -32,7 +35,7 @@ function App() {
             <div className="flex flex-row mt-12">
               {/* Sidebar - Fixed on Left */}
               <div className="w-80 h-screen fixed left-0 top-12 bg-gray-100 ">
-                <Sidebar/>
+                <Sidebar />
               </div>
 
               {/* Main Content - Takes Remaining Space */}
@@ -41,10 +44,14 @@ function App() {
               >
                 <Routes>
                   <>
-                    <Route path="/" element={<DataPage />} />
-                    
+                    <Route path="/" element={<MainPage />} />
+                    <Route path="/mainPage" element={<MainPage />} />
+                    <Route path="/dataPage" element={<DataPage />} />
                     {/* <Route path="/view-file" element={<FileViewer />} /> */}
-                    <Route path="/view" element={<FileViewer />} />  {/* <-- add this */}
+                    <Route path="/result" element={<Result />} />{" "}
+                    <Route path="/existing" element={<Result2 />} />{" "}
+                    <Route path="/validation" element={<ValidationPage />} />
+                    {/* <-- add this */}
                   </>
                 </Routes>
               </div>

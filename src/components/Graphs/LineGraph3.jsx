@@ -15,7 +15,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { updateSessionInDb, addHistoryItem } from "../../utils/historyDb";
 import { useStateContext } from "../../contexts/ContextProvider";
-const LineGraph2 = ({ data, ModelName }) => {
+const LineGraph3 = ({ data, ModelName }) => {
   const { history, setHistory, activeSessionName, setActiveSessionName } =
     useStateContext();
 
@@ -37,7 +37,7 @@ const LineGraph2 = ({ data, ModelName }) => {
   });
 
   // Add centered title
-  const titleText = `${ModelName === "All" ? "All " : ModelName} Model Forecast Report`;
+  const titleText = `Data Report`;
   pdf.setFontSize(18);
   const pageWidth = pdf.internal.pageSize.getWidth();
   const textWidth = pdf.getTextWidth(titleText);
@@ -45,7 +45,7 @@ const LineGraph2 = ({ data, ModelName }) => {
   pdf.text(titleText, textX, 40);
 
   // Add subtitle for graph
-  const subtitleText = "Forecast Graph";
+  const subtitleText = " Graph";
   const subtitleWidth = pdf.getTextWidth(subtitleText);
   const subtitleX = (pageWidth - subtitleWidth) / 2;
   pdf.text(subtitleText, subtitleX, 80);
@@ -54,7 +54,7 @@ const LineGraph2 = ({ data, ModelName }) => {
   pdf.addImage(imgData, "PNG", 40, 90, pageWidth - 80, 180);
 
   // Add subtitle for table
-  const subtitleText1 = "Forecast Table";
+  const subtitleText1 = " Table";
   const subtitleWidth1 = pdf.getTextWidth(subtitleText1);
   const subtitleX1 = (pageWidth - subtitleWidth1) / 2;
   pdf.text(subtitleText1, subtitleX1, 290);
@@ -62,11 +62,11 @@ const LineGraph2 = ({ data, ModelName }) => {
   // Prepare table data
   const headers = ModelName === "All"
     ? ["Time", "TinyTimeMixer", "XGBoost", "Prophet"]
-    : ["Time", "Total Load Prediction"];
+    : ["Time", "total load actual"];
 
   const headers1 = ModelName === "All"
     ? ["time", "TinyTimeMixer", "XGBoost", "Prophet"]
-    : ["time", "total load actual_prediction"];
+    : ["time", "total load actual"];
 
   const rows = data.map((row) =>
     headers1.map((key) => (row[key] !== undefined ? String(row[key]) : ""))
@@ -233,7 +233,7 @@ const LineGraph2 = ({ data, ModelName }) => {
               datasets = [
                 {
                   label: label + ' Forecast',
-                  data: chartData.map(d => d["total load actual_prediction"]),
+                  data: chartData.map(d => d["total load actual"]),
                   borderColor: '#1976d2',
                   fill: false,
                   tension: 0.4,
@@ -399,11 +399,11 @@ const LineGraph2 = ({ data, ModelName }) => {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart
               data={data}
-              margin={{ top: 20, right: 80, bottom: 20, left: 60 }}
+              margin={{ top: 20, right: 80, bottom: 20, left: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
-              <YAxis>
+                 <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
+    <YAxis >
                 <Label
                   content={({ viewBox }) => (
                     <text
@@ -426,7 +426,7 @@ const LineGraph2 = ({ data, ModelName }) => {
               <Legend verticalAlign="bottom" align="center" />
               <Line
                 type="monotone"
-                dataKey="total load actual_prediction"
+                dataKey="total load actual"
                 name={ModelName + " Forecast"}
                 stroke="#1976d2"
                 strokeWidth={3}
@@ -440,4 +440,4 @@ const LineGraph2 = ({ data, ModelName }) => {
   );
 };
 
-export default LineGraph2;
+export default LineGraph3;
