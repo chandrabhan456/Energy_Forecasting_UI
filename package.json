@@ -13,6 +13,7 @@
     "autoprefixer": "^10.4.13",
     "chart.js": "^4.4.9",
     "flatpickr": "^4.6.13",
+    "html-to-image": "^1.11.13",
     "idb": "^8.0.3",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",

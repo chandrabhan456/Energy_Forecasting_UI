@@ -1,0 +1,277 @@
+/* Main container styling */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+.config-heading {
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  color: white;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Upload container */.upload-container {
+  width: 100% !important; /* Ensures it always takes full width */
+  max-width: none; /* Removes any max-width restriction */
+  margin: 0; /* Ensures it doesn't center itself */
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+  padding: 1rem;
+}
+
+
+/* Upload sections */
+.upload-section {
+  background: white;
+  border-radius: 16px;
+ 
+  margin-left: 1%;
+  padding: 1rem;
+  height: 40rem;
+  flex-grow: 1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative; /* Ensure absolute child positioning works */
+}
+.upload-sections-wrapper {
+  display: flex;
+  flex-wrap: wrap; /* Allow sections to wrap */
+  gap: 1rem;
+  justify-content: space-between; /* Space sections equally */
+  width: 100%; /* Ensure wrapper takes full width */
+  background-color: white;
+}
+
+.upload-sectionp {
+  width: 30%; /* Set width as a percentage */
+  min-width: 250px; /* Ensure sections are not too small */
+}
+
+/* Adjust section wrapping at 125% zoom */
+@media (max-width: 80%) {
+  .upload-section {
+    width: 45%; /* When zoom is 125%, set the section width to 45% */
+  }
+}
+
+@media (max-width: 60%) {
+  .upload-section {
+    width: 100%; /* Full width at even smaller sizes */
+  }
+}
+
+.upload-section1 {
+  background: #1e3a8a;
+  border-radius: 6px;
+  padding: 0.1rem;
+  text-align: center;
+  color: white;
+  
+}
+
+/* Step indicator alignment */
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+ul li {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+ul li .flex-col {
+  align-items: center;
+}
+
+/* Vertical stepper line */
+ul li:not(:last-child)::after {
+  content: '';
+  width: 2px;
+  height: 40px; /* Adjust based on spacing */
+  background: #ccc;
+  position: absolute;
+  left: 19px; /* Align with icons */
+  top: 40px;
+}
+
+/* Radio button container */
+.radio-container {
+  display: flex;
+  margin-top: 4%;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: start;
+  padding-left: 2rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+  transform: scale(1.7); /* Less extreme scaling */
+}
+
+.radio-option span {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+/* Next Button Fix */
+.next-btn {
+  position: absolute;
+ 
+  right: 1rem;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  background: #578FCA;
+
+
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Next Button Fix */
+.discard-btn {
+  position: absolute;
+ 
+  right: 4rem;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  background: #578FCA;
+  z-index: 10;
+
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.next-btn:hover {
+  background-color: #0c2b5f;
+}
+
+/* Styling for the container of the checkboxes */
+.container-selector {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}ul.custom-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li::after {
+  content: none !important;
+  display: none !important;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #3b82f6; /* Blue color */
+  animation: blink 1.4s infinite both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%,
+  50%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  75% {
+    opacity: 1;
+  }
+}.document-display {
+  padding: 0px;
+  text-align: left; /* Align the entire content to the left */
+}
+
+.container {
+  margin-bottom: 20px;
+}
+
+.folder {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.folder-header {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.folder-icon {
+  margin-right: 8px;
+}
+
+.documents {
+  margin-left: 20px;
+}
+
+.document label {
+  display: inline-flex;  /* Make sure content inside label stays in a row */
+  align-items: center;
+  margin-bottom: 8px;
+  text-align: left;  /* Ensure label text is left-aligned */
+}
+
+.document input[type="radio"] {
+  margin-left: 0; /* Ensure the radio button is at the left */
+  margin-right: 10px; /* Space between radio button and document name */
+  
+}
+
+.container h3 {
+  margin-left: 20px; /* Left-align container name */
+}
+
+.document {
+  margin-left: 20px; /* Left-align document item */
+}
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #1e3a8a;
+  border-radius: 4px;
+}

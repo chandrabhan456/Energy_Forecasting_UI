@@ -261,8 +261,8 @@
 .scroll-table-container {
   max-height: 800px;
   overflow: auto;
-  margin: 20px auto;
-  width: 80%;
+  margin: 5px auto;
+  width: 100%;
 }
 .nice-table {
   

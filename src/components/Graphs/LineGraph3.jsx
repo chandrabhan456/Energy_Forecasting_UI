@@ -18,7 +18,7 @@ import { useStateContext } from "../../contexts/ContextProvider";
 const LineGraph3 = ({ data, ModelName }) => {
   const { history, setHistory, activeSessionName, setActiveSessionName } =
     useStateContext();
-
+  console.log("EDA graph data",data)
   const chartRef1 = useRef();
  const handleDownloadPDF = async () => {
   if (!chartRef1.current) return;
@@ -399,11 +399,11 @@ const LineGraph3 = ({ data, ModelName }) => {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart
               data={data}
-              margin={{ top: 20, right: 80, bottom: 20, left: 10 }}
+              margin={{ top: 20, right: 80, bottom: 60, left: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-                 <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
-    <YAxis >
+              <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
+              <YAxis>
                 <Label
                   content={({ viewBox }) => (
                     <text

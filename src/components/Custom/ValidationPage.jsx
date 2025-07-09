@@ -15,7 +15,7 @@ const modelOptions = [
   { value: "XGBoost", label: "XGBoost" },
   { value: "Prophet", label: "Prophet" },
   { value: "Ensemble", label: "Ensemble" },
-  { value: "All", label: "All Models" },
+  // { value: "All", label: "All Models" },
 ];
 
 const FreqOptions = [
@@ -42,11 +42,14 @@ const ValidationPage = () => {
   const [selectedModel, setSelectedModel] = useState(modelOptions[0].value);
   const [selectedFreq, setSelectedFreq] = useState(FreqOptions[0].value);
   const [evaluationData, setEvaluationData] = useState("");
+  
   const [activeButton2, setActiveButton2] = useState("Graph");
   const [loading, setLoading] = useState(false);
   const [forecast, setForecast] = useState(false);
   const [modelData, setModelData] = useState("");
+   const [modelData1, setModelData1] = useState("");
   const [graphData, setGraphData] = useState([]);
+  const [graphData1, setGraphData1] = useState([]);
   const chartRef1 = useRef();
 
   const navigate = useNavigate(); // Initialize the navigate function
@@ -97,6 +100,7 @@ const ValidationPage = () => {
 
         if (data) {
           setModelData(data.csv_text_validation);
+          setModelData1(data.csv_text_actual)
           setEvaluationData(data.eval_metrics)
           setForecast(true);
         }
@@ -127,10 +131,16 @@ const ValidationPage = () => {
       const parsed = parseCSV(modelData);
       setGraphData(parsed);
       console.log("parsed data:", parsed);
-    } else {
+    }
+    if (modelData1) {
+      const parsed = parseCSV(modelData1);
+      setGraphData1(parsed);
+      console.log("parsed data:", parsed);
+    }
+    else {
       setGraphData([]);
     }
-  }, [modelData]);
+  }, [modelData,modelData1]);
 
   return (
     <div className="mt-8 ">
@@ -143,7 +153,7 @@ const ValidationPage = () => {
         </button>
         <div className="ml-[30%]">
           <button className="text-black font-bold text-xl bg-transparent border-none  flex items-center p-2">
-            Forecasting with Custom Data
+            Model training on Custom Data
           </button>
         </div>
       </div>
@@ -230,7 +240,7 @@ const ValidationPage = () => {
             </select>
 
             <button className={`fancy-3d-btn h-12`} onClick={handleEvaluation}>
-              Validation
+              Train Model
             </button>
           </div>
         </div>{" "}
@@ -242,7 +252,7 @@ const ValidationPage = () => {
             className=" shadow-[0_0_24px_4px_theme('colors.blue.200')] rounded-lg text-center text-3xl"
             style={{ padding: "20px", height: "80%" }}
           >
-            Validating Model...
+            Training the Model...
           </p>
         )}
         {!loading && forecast && (
@@ -286,9 +296,9 @@ const ValidationPage = () => {
                   }}
                   ref={chartRef1}
                 >
-                  <LineGraph1 data={graphData} ModelName={selectedModel1} />
+                  <LineGraph1 data={graphData} data1={graphData1} ModelName={selectedModel1} />
                 </div>
-              <div className="flex items-center justify-center min-h-screen bg-white" style={{marginTop:'-23%'}}>
+              <div className="flex items-center justify-center min-h-screen bg-white" style={{marginTop:'-25%'}}>
                   <table className="nice-table w-[40%]">
                     <thead>
                       <tr className="bg-blue-400">

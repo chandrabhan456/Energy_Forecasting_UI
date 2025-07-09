@@ -303,7 +303,20 @@
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s, color 0.3s;
-  width: 100px; /* Fixed width for buttons */
+  width: 110px; /* Fixed width for buttons */
+  text-align: center; /* Center text */
+}
+
+.main-page-button1 {
+  background-color: #f0f0f0; /* Default background color for inactive buttons */
+  color: black; /* Text color for inactive buttons */
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  width: 210px; /* Fixed width for buttons */
   text-align: center; /* Center text */
 }
 
@@ -312,6 +325,16 @@
 }
 
 .main-page-button.active {
+  background-color: #007BFF; /* Blue background for the active button */
+  color: white; /* White text color for the active button */
+}
+
+
+.main-page-button1:hover {
+  background-color: #e0e0e0; /* Slightly darker shade for hover effect */
+}
+
+.main-page-button1.active {
   background-color: #007BFF; /* Blue background for the active button */
   color: white; /* White text color for the active button */
 }

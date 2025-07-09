@@ -18,7 +18,35 @@ import { useStateContext } from "../../contexts/ContextProvider";
 const LineGraph2 = ({ data, ModelName }) => {
   const { history, setHistory, activeSessionName, setActiveSessionName } =
     useStateContext();
+ console.log('data is',data)
+ const cleanedData = data.map(row => {
+  const cleanedRow = {};
+  for (const key in row) {
+    cleanedRow[key] = row[key] === '' ? undefined : row[key];
+  }
+  return cleanedRow;
+});
 
+  const allValues = data.reduce(
+    (acc, cur) => {
+      if (cur["total load actual_prediction"] !== undefined && cur["total load actual_prediction"] !== null) acc.push(cur["total load actual_prediction"]);
+      return acc;
+    },
+    []
+  );
+  const min = Math.min(...allValues);
+  const max = Math.max(...allValues);
+
+  // Create 4-stick y-axis: 0, min, ., ., max
+  const interval = (max - min) / 3;
+ const ticks = [
+  0,
+  Math.round(min),
+  Math.round(min + interval),
+  Math.round(min + 2 * interval),
+  Math.round(max)
+];
+    
   const chartRef1 = useRef();
  const handleDownloadPDF = async () => {
   if (!chartRef1.current) return;
@@ -61,11 +89,11 @@ const LineGraph2 = ({ data, ModelName }) => {
 
   // Prepare table data
   const headers = ModelName === "All"
-    ? ["Time", "TinyTimeMixer", "XGBoost", "Prophet"]
+    ? ["Time", "TinyTimeMixer", "XGBoost", "Prophet", "LSTM", "Ensemble"]
     : ["Time", "Total Load Prediction"];
 
   const headers1 = ModelName === "All"
-    ? ["time", "TinyTimeMixer", "XGBoost", "Prophet"]
+    ? ["time", "TinyTimeMixer", "XGBoost", "Prophet", "LSTM", "Ensemble"]
     : ["time", "total load actual_prediction"];
 
   const rows = data.map((row) =>
@@ -153,7 +181,7 @@ const LineGraph2 = ({ data, ModelName }) => {
     if (!data || !data.length) return;
     const headers =
       ModelName === "All"
-        ? ["time", "TinyTimeMixer", "XGBoost", "Prophet"]
+        ? ["time", "TinyTimeMixer", "XGBoost", "Prophet", "LSTM", "Ensemble"]
         : ["time", "total load actual_prediction"];
     const csvRows = [];
     csvRows.push(headers.join(","));
@@ -178,7 +206,7 @@ const LineGraph2 = ({ data, ModelName }) => {
   // Zoom handler (open chart in new tab)
   const handleZoomClick = () => {
     // Prepare the chart data for the new window
-    const chartData = JSON.stringify(data);
+    const chartData = JSON.stringify(cleanedData);
     const chartLabel = ModelName;
 
     // The HTML content for the new window
@@ -228,6 +256,21 @@ const LineGraph2 = ({ data, ModelName }) => {
                   fill: false,
                   tension: 0.4,
                 },
+                    {
+                  label: 'LSTM',
+                  data: chartData.map(d => d.LSTM),
+                  borderColor: '#000000',
+                  fill: false,
+                  tension: 0.4,
+                },
+                {
+                  label: 'Ensemble',
+                  data: chartData.map(d => d.Ensemble),
+                  borderColor: 'grey',
+                  fill: false,
+                  tension: 0.4,
+                },
+            
               ];
             } else {
               datasets = [
@@ -363,7 +406,8 @@ const LineGraph2 = ({ data, ModelName }) => {
       >
         {ModelName === "All" ? (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
+            <LineChart data={cleanedData}
+            margin={{ top: 20, right: 80, bottom: 60, left: 10 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
               <YAxis />
@@ -393,17 +437,33 @@ const LineGraph2 = ({ data, ModelName }) => {
                 strokeWidth={3}
                 dot={false}
               />
+              <Line
+                type="monotone"
+                dataKey="LSTM"
+                name="LSTM"
+                stroke="#000000"
+                strokeWidth={3}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="Ensemble"
+                name="Ensemble"
+                stroke="grey"
+                strokeWidth={3}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height={250}>
             <LineChart
               data={data}
-              margin={{ top: 20, right: 80, bottom: 20, left: 60 }}
+              margin={{ top: 20, right: 80, bottom: 60, left: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" tickFormatter={(str) => str.slice(0, 10)} />
-              <YAxis>
+              <YAxis ticks={ticks}>
                 <Label
                   content={({ viewBox }) => (
                     <text

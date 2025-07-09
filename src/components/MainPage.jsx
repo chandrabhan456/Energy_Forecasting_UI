@@ -9,7 +9,7 @@ const MainPage = () => {
   };
   
   const handleNavigate1 = () => {
-    navigate('/dataPage');
+    navigate('/custom');
   };
 
   return (
@@ -18,7 +18,7 @@ const MainPage = () => {
         className="px-6 py-2 rounded-lg border border-blue-600 bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 hover:border-blue-700 transition"
         onClick={handleNavigate}
       >
-        Forecast with Existing Models
+        Forecasting with Pretrained Models
       </button>
       <button
         className="px-6 py-2 rounded-lg border border-green-600 bg-green-600 text-white font-semibold shadow hover:bg-green-700 hover:border-green-700 transition"

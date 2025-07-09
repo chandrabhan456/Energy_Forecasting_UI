@@ -324,7 +324,7 @@ const Result2 = () => {
                 }}
                 ref={chartRef1}
               >
-                <LineGraph2 data={graphData} ModelName={selectedModel1} />
+                <LineGraph2 data={graphData} ModelName={selectedModel} />
               </div>
             )}
             {activeButton2 === "Table" && (
@@ -332,7 +332,7 @@ const Result2 = () => {
                 className="scroll-table-container"
                 style={{ marginTop: "10px" }}
               >
-                {selectedModel1 === "All" ? (
+                {selectedModel === "All" ? (
                   <table className="nice-table w-[100%]">
                     <thead>
                       <tr>
@@ -340,6 +340,8 @@ const Result2 = () => {
                         <th>TinyTimeMixer</th>
                         <th>XGBoost</th>
                         <th>Prophet</th>
+                        <th>LSTM</th>
+                        <th>Ensemble</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -349,6 +351,8 @@ const Result2 = () => {
                           <td>{row["TinyTimeMixer"]}</td>
                           <td>{row["XGBoost"]}</td>
                           <td>{row["Prophet"]}</td>
+                          <td>{row["LSTM"]}</td>
+                          <td>{row["Ensemble"]}</td>
                         </tr>
                       ))}
                     </tbody>

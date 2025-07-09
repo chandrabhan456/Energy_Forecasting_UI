@@ -43,6 +43,3 @@ input:focus {
 .main-content {
   padding-top: 64px;  /* Same as navbar height */
 }
-body {
-  overflow: hidden;
-}

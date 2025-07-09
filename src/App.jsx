@@ -10,6 +10,7 @@ import {
   MainPage,
   ValidationPage,
   Result2,
+  MainPage1
 } from "./components";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
                   <>
                     <Route path="/" element={<MainPage />} />
                     <Route path="/mainPage" element={<MainPage />} />
+                    <Route path="/custom" element={<MainPage1 />} />
                     <Route path="/dataPage" element={<DataPage />} />
                     {/* <Route path="/view-file" element={<FileViewer />} /> */}
                     <Route path="/result" element={<Result />} />{" "}
