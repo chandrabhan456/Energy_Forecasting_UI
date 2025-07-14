@@ -14,7 +14,7 @@ const modelOptions = [
   { value: "TinyTimeMixer", label: "TinyTimeMixer" },
   { value: "XGBoost", label: "XGBoost" },
   { value: "Prophet", label: "Prophet" },
-  { value: "Ensemble", label: "Ensemble" },
+  { value: "Ensemble", label: "Ensemble (XGB+Prophet)" },
   // { value: "All", label: "All Models" },
 ];
 

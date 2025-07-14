@@ -517,78 +517,129 @@ useEffect(() => {
     }
     return y;
   }
-  const generateReport = async () => {
-    const getPDFBlob = (doc) =>
-      new Promise((resolve) => {
-        const blob = doc.output("blob");
-        resolve(blob);
+ const generateReport = async () => {
+  const getPDFBlob = (doc) =>
+    new Promise((resolve) => {
+      const blob = doc.output("blob");
+      resolve(blob);
+    });
+
+  // --- EDA Report ---
+  const docEDA = new jsPDF();
+  let y = 20;
+  let pageWidth = docEDA.internal.pageSize.getWidth();
+
+  docEDA.setFontSize(20);
+  docEDA.text("EDA Report", pageWidth / 2, y, { align: "center" });
+  y += 12;
+
+  docEDA.setFontSize(12);
+  sentences.forEach((sentence, idx) => {
+    docEDA.text(`${idx + 1}. ${sentence}`, 15, y);
+    y += 8;
+  });
+  y += 8;
+
+  y = renderChart(docEDA, y, pageWidth, chartImages[0], "EDA Chart");
+  y = renderTable(docEDA, y, pageWidth, tableData, "EDA Table");
+  y = renderChart(docEDA, y, pageWidth, imageURL1, "Image 1");
+  y = renderChart(docEDA, y, pageWidth, imageURL2, "Image 2");
+
+  // --- Model Report ---
+  const docModel = new jsPDF();
+  y = 20;
+  pageWidth = docModel.internal.pageSize.getWidth();
+
+  docModel.setFontSize(20);
+  docModel.text("Model Report", pageWidth / 2, y, { align: "center" });
+  y += 12;
+
+  y = renderChart(docModel, y, pageWidth, chartImages[1], "Model Chart");
+  y = renderTable(docModel, y, pageWidth, graphDataValidation, "Model Table");
+
+  // --- Forecast Report ---
+  const docForecast = new jsPDF();
+  y = 20;
+  pageWidth = docForecast.internal.pageSize.getWidth();
+
+  docForecast.setFontSize(20);
+  docForecast.text("Forecast Report", pageWidth / 2, y, { align: "center" });
+  y += 12;
+
+  y = renderChart(
+    docForecast,
+    y,
+    pageWidth,
+    chartImages[2],
+    "Forecast Chart"
+  );
+  y = renderTable(
+    docForecast,
+    y,
+    pageWidth,
+    graphDataForecast,
+    "Forecast Table"
+  );
+
+  // --- Convert all to blobs ---
+  const blobs = await Promise.all([
+    getPDFBlob(docEDA),
+    getPDFBlob(docModel),
+    getPDFBlob(docForecast),
+  ]);
+
+  // Save blobs in state
+  setPdfs(blobs);
+
+  // --- Update history ---
+  setHistory((prevHistory) => {
+    if (prevHistory.length === 0) return prevHistory;
+
+    const newHistory = prevHistory.map((session) => {
+      if (session.sessionName !== activeSessionName) {
+        return session;
+      }
+
+      const pdfFiles = blobs.map((blob, index) => {
+        let pdfFileName;
+        switch (index) {
+          case 0:
+            pdfFileName = "EDA_Report.pdf";
+            break;
+          case 1:
+            pdfFileName = `TrainModel_${selectedModel}_Report.pdf`;
+            break;
+          case 2:
+            pdfFileName =`Forecast_${selectedModel}_Report.pdf`;
+            break;
+          default:
+            pdfFileName = "Unknown_Report.pdf";
+        }
+
+        const pdfFileContent = URL.createObjectURL(blob);
+        return {
+          name: pdfFileName,
+          content: pdfFileContent,
+          createdAt: new Date().toISOString(),
+          type: "pdf_document",
+        };
       });
 
-    // --- EDA Report ---
-    const docEDA = new jsPDF();
-    let y = 20;
-    let pageWidth = docEDA.internal.pageSize.getWidth();
+      const updatedSession = {
+        ...session,
+        files: [...(session.files || []), ...pdfFiles],
+      };
 
-    docEDA.setFontSize(20);
-    docEDA.text("EDA Report", pageWidth / 2, y, { align: "center" });
-    y += 12;
+      updateSessionInDb(updatedSession);
 
-    docEDA.setFontSize(12);
-    sentences.forEach((sentence, idx) => {
-      docEDA.text(`${idx + 1}. ${sentence}`, 15, y);
-      y += 8;
+      return updatedSession;
     });
-    y += 8;
 
-    y = renderChart(docEDA, y, pageWidth, chartImages[0], "EDA Chart");
-    y = renderTable(docEDA, y, pageWidth, tableData, "EDA Table");
-    y = renderChart(docEDA, y, pageWidth, imageURL1, "Image 1");
-    y = renderChart(docEDA, y, pageWidth, imageURL2, "Image 2");
+    return newHistory;
+  });
+};
 
-    // --- Model Report ---
-    const docModel = new jsPDF();
-    y = 20;
-    pageWidth = docModel.internal.pageSize.getWidth();
 
-    docModel.setFontSize(20);
-    docModel.text("Model Report", pageWidth / 2, y, { align: "center" });
-    y += 12;
-
-    y = renderChart(docModel, y, pageWidth, chartImages[1], "Model Chart");
-    y = renderTable(docModel, y, pageWidth, graphDataValidation, "Model Table");
-
-    // --- Forecast Report ---
-    const docForecast = new jsPDF();
-    y = 20;
-    pageWidth = docForecast.internal.pageSize.getWidth();
-
-    docForecast.setFontSize(20);
-    docForecast.text("Forecast Report", pageWidth / 2, y, { align: "center" });
-    y += 12;
-
-    y = renderChart(
-      docForecast,
-      y,
-      pageWidth,
-      chartImages[2],
-      "Forecast Chart"
-    );
-    y = renderTable(
-      docForecast,
-      y,
-      pageWidth,
-      graphDataForecast,
-      "Forecast Table"
-    );
-
-    // --- Convert all to blobs and save in state ---
-    const blobs = await Promise.all([
-      getPDFBlob(docEDA),
-      getPDFBlob(docModel),
-      getPDFBlob(docForecast),
-    ]);
-    setPdfs(blobs);
-  };
 
   const getBlobUrl = () => {
     if (!pdfs.length) return null;
@@ -597,6 +648,7 @@ useEffect(() => {
     else if (activeButton2 === "Forecast") index = 2;
     const blob = pdfs[index];
     if (!blob) return null;
+    
     return URL.createObjectURL(blob);
   };
 

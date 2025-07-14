@@ -15,7 +15,7 @@ const modelOptions = [
   { value: "XGBoost", label: "XGBoost" },
   { value: "Prophet", label: "Prophet" },
   { value: "LSTM", label: "LSTM" },
-  { value: "Ensemble", label: "Ensemble" },
+  { value: "Ensemble", label: "Ensemble (XGB+Prophet)" },
   { value: "All", label: "All Models" },
 ];
 const FreqOptions = [
@@ -27,7 +27,7 @@ const FreqOptions = [
   { value: "Yearly", label: "Yearly" },
 ];
 const RegionOptions = [
-   { value: "Initial", label: "Select Region" },
+  { value: "Initial", label: "Select Region" },
   { value: "UK", label: "UK" },
   { value: "SPAIN", label: "SPAIN" },
 ];
@@ -44,6 +44,8 @@ const Result2 = () => {
     selectedModel1,
     setSelectedModel1,
   } = useStateContext();
+  const [evaluationCSVData, setEvaluationCSVData] = useState("");
+  const [evaluationData, setEvaluationData] = useState("");
   const [selectedRegion, setSelectedRegion] = useState(RegionOptions[0].value);
   const [selectedModel, setSelectedModel] = useState(modelOptions[0].value);
   const [selectedFreq, setSelectedFreq] = useState(FreqOptions[0].value);
@@ -86,7 +88,7 @@ const Result2 = () => {
     );
   }
   const handleResult = async () => {
-    if (selectedRegion==="Initial" ||selectedFreq === "Initial") {
+    if (selectedRegion === "Initial" || selectedFreq === "Initial") {
       alert("Select Region/Frequency from dropdown.");
     } else {
       setLoading(true);
@@ -111,6 +113,7 @@ const Result2 = () => {
 
         if (data) {
           setModelData(data.csv_text_future_forecast);
+          setEvaluationCSVData(data.csv_text_eval_metric);
           setForecast(true);
         }
       } catch (error) {
@@ -151,11 +154,19 @@ const Result2 = () => {
       const parsed = parseCSV(modelData);
       setGraphData(parsed);
       console.log("parsed data:", parsed);
+
+      const parsed1 = parseCSV(evaluationCSVData);
+      setEvaluationData(parsed1)
+      console.log("parsed evalution data:", parsed1);
+
     } else {
       setGraphData([]);
     }
-  }, [modelData]);
+  }, [modelData, evaluationCSVData]);
 
+  useEffect(() => {
+    console.log("Evaluation Data", evaluationData)
+  }, [evaluationData]);
   return (
     <div className="mt-8 ">
       <div className="ml-8 flex">
@@ -165,24 +176,24 @@ const Result2 = () => {
         >
           Home
         </button>
-          <div className="ml-[30%]">
-            <button className="text-black font-bold text-xl bg-transparent border-none  flex items-center p-2">
-              Forecasting with Existing Models
-            </button>
-          </div>
+        <div className="ml-[30%]">
+          <button className="text-black font-bold text-xl bg-transparent border-none  flex items-center p-2">
+            Forecasting with Existing Models
+          </button>
+        </div>
       </div>
       <div className="flex flex-col items-center mt-16">
-      <div className="flex items-start">
+        <div className="flex items-start">
           <div className="">
             <button
               className="text-white bg-transparent border-none  flex items-center p-2"
-             
+
             >
-          
+
               Previous
             </button>
           </div>
-        
+
         </div>
         <div className="flex gap-2 ">
           <div>
@@ -300,17 +311,22 @@ const Result2 = () => {
             >
               <button
                 onClick={() => handleButtonClick("Graph")}
-                className={`main-page-button ${
-                  activeButton2 === "Graph" ? "active" : ""
-                }`}
+                className={`main-page-button ${activeButton2 === "Graph" ? "active" : ""
+                  }`}
               >
                 Graph
               </button>
               <button
+                onClick={() => handleButtonClick("Evaluation")}
+                className={`main-page-button ${activeButton2 === "Evaluation" ? "active" : ""
+                  }`}
+              >
+                Evaluation
+              </button>
+              <button
                 onClick={() => handleButtonClick("Table")}
-                className={`main-page-button ${
-                  activeButton2 === "Table" ? "active" : ""
-                }`}
+                className={`main-page-button ${activeButton2 === "Table" ? "active" : ""
+                  }`}
               >
                 Table
               </button>
@@ -326,6 +342,58 @@ const Result2 = () => {
               >
                 <LineGraph2 data={graphData} ModelName={selectedModel} />
               </div>
+            )}
+            {activeButton2 === "Evaluation" && (
+              <>
+                <div
+                  className="scroll-table-container"
+                  style={{ marginTop: "10px" }}
+                >
+                  {selectedModel === "All" ? (
+                  <table className="nice-table w-[100%]">
+                    <thead>
+                      <tr>
+                        <th>Evaluation Metric</th>
+                        <th>TinyTimeMixer</th>
+                        <th>XGBoost</th>
+                        <th>Prophet</th>
+                        <th>LSTM</th>
+                        <th>Ensemble</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evaluationData.map((row, idx) => (
+                        <tr key={idx}>
+                          <td>{row["Metric"]}</td>
+                          <td>{row["TinyTimeMixer"]}</td>
+                          <td>{row["XGBoost"]}</td>
+                          <td>{row["Prophet"]}</td>
+                          <td>{row["LSTM"]}</td>
+                          <td>{row["Ensemble (XGB+Prophet)"]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <table className="nice-table w-[100%]">
+                    <thead>
+                      <tr>
+                        <th>Evaluation Metric</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {evaluationData.map((row, idx) => (
+                        <tr key={idx}>
+                          <td>{row["Metric"]}</td>
+                          <td>{row["Value"]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  )}
+                </div>
+              </>
             )}
             {activeButton2 === "Table" && (
               <div

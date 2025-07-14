@@ -3,7 +3,7 @@ import {
   updateSessionNameInDb,
   getSessionById,
 } from "../utils/historyDb";
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import "./Sidebar.css";
 import Chatbot from "../assets/energy.png";
 import { useStateContext } from "../contexts/ContextProvider.jsx";
@@ -75,7 +75,7 @@ const Sidebar = () => {
   const [loading, setLoading] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [newSessionName, setNewSessionName] = useState("");
-
+ // Dependency array listens to changes in history
   const toggleSession = (sessionName) => {
     setOpenSessions((prev) => ({
       ...prev,
@@ -108,7 +108,7 @@ const Sidebar = () => {
         </div>
         <div className="container my-3 font-bold">History</div>
 
-        <ul className="pl-2">
+        <ul className="pl-2 ">
           {(history?.length ?? 0) === 0 ? (
             <li className="text-gray-500">No sessions yet</li>
           ) : (
@@ -116,9 +116,9 @@ const Sidebar = () => {
               .slice()
               .reverse()
               .map((session, idx) => (
-                <li key={session.id} className="mb-2">
+                <li key={session.id} className="mb-0 items-start flex-col">
                   <div
-                    className="font-semibold flex items-center cursor-pointer select-none"
+                    className="font-semibold flex  cursor-pointer select-none "
                     onClick={() =>
                       setOpenSessions((prev) => ({
                         ...prev,
@@ -126,7 +126,7 @@ const Sidebar = () => {
                       }))
                     }
                   >
-                    <span className="mr-1">
+                    <span className="mr-1 ">
                       {openSessions[session.sessionName] ? "▼" : "►"}
                     </span>
                     {editingSessionId === session.id ? (
@@ -212,13 +212,14 @@ const Sidebar = () => {
                       </>
                     )}
                   </div>
+                  <div className="mt-0">
                   {openSessions[session.sessionName] && (
-                    <ul className="ml-4">
+                    <ul className="ml-0">
                       {session.files.map((file, fIdx) => (
                         <li
                           key={fIdx}
                           className="text-sm flex items-center"
-                          style={{ marginTop: "-10px" }}
+                          style={{ marginTop: "-15px" }}
                         >
                           {/* Determine the emoji based on the file type */}
                           <span style={{ marginRight: "8px" }}>
@@ -228,11 +229,12 @@ const Sidebar = () => {
                               ? "📄"
                               : "📁"}
                           </span>
-                          <span className="flex-1 truncate">{file.name}</span>
+                          <span className="flex-1 truncate" style={{marginLeft:'-20px'}}>{file.name}</span>
                           {console.log("dile", file)}
                           {file.type === "csv_document" && (
                             <button
                               className="px-1 py-1 rounded text-xs"
+                              style={{marginLeft:'-5px'}}
                               onClick={() => {
                                 setCsvFile1(file);
                                 setActiveHistory(true);
@@ -245,6 +247,8 @@ const Sidebar = () => {
                           )}
                           <button
                             className="px-1 py-1 rounded text-xs"
+                            style={{marginLeft:'-20px'}}
+
                             onClick={async (e) => {
                               e.stopPropagation();
                               setLoading(true);
@@ -344,6 +348,7 @@ const Sidebar = () => {
 
                           <button
                             className="px-1 py-1 rounded text-xs"
+                            style={{marginLeft:'-10px'}}
                             onClick={async (e) => {
                               e.stopPropagation();
                               setLoading(true);
@@ -468,6 +473,7 @@ const Sidebar = () => {
                       ))}
                     </ul>
                   )}
+                  </div>
                 </li>
               ))
           )}
