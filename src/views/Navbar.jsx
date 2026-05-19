@@ -3,33 +3,28 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate, Navigate } from "react-router-dom";
 
 import { useStateContext } from "../contexts/ContextProvider";
-import nttlogo from "../assets/nttdatalogo.svg";
-import { clearHistory } from '../utils/historyDb';
+import logo from "../assets/cvlogo.png";
 import "./navbar.css";
-
+import UserDropdown from "./UserDropdown";
 const Navbar = () => {
-  const { mainPage, setMainPage, setlogin1 } = useStateContext();
+  const {} = useStateContext();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    localStorage.removeItem('csv_history'); // remove CSV history
-    await clearHistory();
-    setlogin1(false); // Set login state to false
-    navigate("/"); // Navigate to the root path
-    window.location.reload(); // This will refresh the entire app
-  };
   return (
     <div>
       <div className="flex justify-between md:mx-0  relative w-full ">
         <div className="flex" style={{ marginTop: "-13px" }}>
           <img
-            style={{ width: "250px", marginLeft: "-5px", marginTop: "5px" }}
+            style={{ width: "324px", marginLeft: "-5px", marginTop: "5px" }}
             className=""
-            src={nttlogo}
-            alt="nttlogo"
+            src={logo}
+            alt="logo"
           />
-          <div className="mt-6 text-2xl " style={{ cursor: "pointer" }}>
-            ENERGY FORECASTING
+          <div
+            className="mt-6 font-bold ml-2 text-2xl "
+            style={{ cursor: "pointer" }}
+          >
+            TalentScope
           </div>
         </div>
 
@@ -40,11 +35,8 @@ const Navbar = () => {
             style={{ marginLeft: "-30px" }}
             className="flex items-center justify-center mt-1.5 cursor-pointer"
           >
-            <div
-              className="cursor-pointer w-24 text-center mt-3 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              onClick={handleLogout}
-            >
-              Logout
+            <div className="mt-2">
+              <UserDropdown />
             </div>
           </div>
         </div>

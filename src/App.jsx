@@ -5,25 +5,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar, Sidebar } from "./views";
 import { useStateContext } from "./contexts/ContextProvider.jsx";
 import {
-  DataPage,
-  Result,
-  MainPage,
-  ValidationPage,
-  Result2,
-  MainPage1
+
+  Profile
 } from "./components";
 
 function App() {
-  localStorage.setItem("OpenAI_Configuration", true);
-  localStorage.removeItem("login");
-  const { mainPage, login1, setlogin1 } = useStateContext();
+  const {login} = useStateContext();
 
   return (
     <div>
       <BrowserRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
-        {!login1 ? (
+        {!login ? (
           <Login />
         ) : (
           <div className="flex flex-col min-h-screen">
@@ -45,15 +39,7 @@ function App() {
               >
                 <Routes>
                   <>
-                    <Route path="/" element={<MainPage />} />
-                    <Route path="/mainPage" element={<MainPage />} />
-                    <Route path="/custom" element={<MainPage1 />} />
-                    <Route path="/dataPage" element={<DataPage />} />
-                    {/* <Route path="/view-file" element={<FileViewer />} /> */}
-                    <Route path="/result" element={<Result />} />{" "}
-                    <Route path="/existing" element={<Result2 />} />{" "}
-                    <Route path="/validation" element={<ValidationPage />} />
-                    {/* <-- add this */}
+                    <Route path="/userprofile" element={<Profile />} />
                   </>
                 </Routes>
               </div>

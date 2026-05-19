@@ -1,524 +1,350 @@
-import {
-  getHistory,
-  updateSessionNameInDb,
-  getSessionById,
-} from "../utils/historyDb";
-import React, { useState,useEffect } from "react";
-import "./Sidebar.css";
-import Chatbot from "../assets/energy.png";
-import { useStateContext } from "../contexts/ContextProvider.jsx";
+// components/Sidebar.jsx
+import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import { useStateContext } from "../contexts/ContextProvider";
 
-// Defensive CSV parser
-function parseCSV(text) {
-  if (typeof text !== "string") return [];
-  return text
-    .trim()
-    .split("\n")
-    .map((line) => line.split(","));
-}
+// =============================
+// USER MENU ITEMS
+// =============================
+const userMenuItems = [
+  {
+    label: "Profile",
+    path: "/userprofile",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Jobs",
+    path: "/jobs",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183
+             0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2
+             2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2
+             2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Learning Hub",
+    path: "/learning-hub",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168
+             5.477 3 6.253v13C4.168 18.477 5.754 18 7.5
+             18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754
+             5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832
+             18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+        />
+      </svg>
+    ),
+  },
+];
 
-// Table renderer for CSV
-function CSVTable({ content }) {
-  if (!content || typeof content !== "string") {
-    return (
-      <div style={{ color: "red", padding: 16 }}>
-        No CSV content to display.
-      </div>
-    );
-  }
-  const rows = parseCSV(content);
-  if (!rows.length)
-    return <div style={{ color: "red", padding: 16 }}>Empty CSV.</div>;
+// =============================
+// ADMIN MENU ITEMS
+// =============================
+const adminMenuItems = [
+  {
+    label: "Dashboard",
+    path: "/admin/dashboard",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0
+             001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1
+             1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1
+             1 0 011 1v4a1 1 0 001 1m-6 0h6"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Manage Users",
+    path: "/admin/users",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6
+             6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13
+             7a4 4 0 11-8 0 4 4 0 018 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Manage Jobs",
+    path: "/admin/jobs",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 13.255A23.931 23.931 0 0112 15c-3.183
+             0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2
+             2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2
+             2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Learning Hub",
+    path: "/admin/learning-hub",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5
+             5S4.168 5.477 3 6.253v13C4.168 18.477 5.754
+             18 7.5 18s3.332.477 4.5 1.253m0-13C13.168
+             5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5
+             1.253v13C19.832 18.477 18.247 18 16.5
+                       18c-1.746 0-3.332.477-4.5 1.253"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Settings",
+    path: "/admin/settings",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724
+             1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37
+             2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756
+             2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94
+             1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572
+             1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724
+             0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724
+             1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924
+             0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826
+             -3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+        />
+      </svg>
+    ),
+  },
+];
+
+// =============================
+// SIDEBAR COMPONENT
+// =============================
+const Sidebar = ({ isOpen, onClose }) => {
+  const { user,role } = useStateContext();
+
+  // Pick menu based on role
+  const menuItems = role === "admin" ? adminMenuItems : userMenuItems;
+
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i}>
-              {row.map((cell, j) => (
-                <td
-                  key={j}
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "4px 8px",
-                    background: i === 0 ? "#eee" : "white",
-                    fontWeight: i === 0 ? "bold" : "normal",
-                  }}
-                >
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-const Sidebar = () => {
-  const {
-    history,
-    setHistory,
-    csvFile1,
-    setCsvFile1,
-    activeHistory,
-    setActiveHistory,
-    activeSessionName,
-    setActiveSessionName,
-  } = useStateContext();
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeButton, setActiveButton] = useState(null);
-  const [openSessions, setOpenSessions] = useState({});
-  const [viewedFile, setViewedFile] = useState(null); // { sessionName, file }
-  const [fileContent, setFileContent] = useState(""); // for dynamic loading
-  const [loading, setLoading] = useState(false);
-  const [editingSessionId, setEditingSessionId] = useState(null);
-  const [newSessionName, setNewSessionName] = useState("");
- // Dependency array listens to changes in history
-  const toggleSession = (sessionName) => {
-    setOpenSessions((prev) => ({
-      ...prev,
-      [sessionName]: !prev[sessionName],
-    }));
-  };
-  async function handleRenameSession(sessionId, newName) {
-    // Update in-memory
-    history((prev) =>
-      prev.map((s) => (s.id === sessionId ? { ...s, sessionName: newName } : s))
-    );
-    // Update in DB
-    await updateSessionNameInDb(sessionId, newName);
-  }
-  return (
-    <div>
-      {/* Sidebar */}
-      <div className="w-80 p-4 mt-1 h-[90%] overflow-y-auto custom-scrollbar overflow-x-hidden">
-        <div style={{ textAlign: "left", marginTop: "5px" }}>
-          <img
-            src={Chatbot}
-            alt="Agent Logo"
-            style={{
-              width: "75%",
-              height: "165px",
-              display: "block",
-              margin: "0 auto",
-            }}
-          />
-        </div>
-        <div className="container my-3 font-bold">History</div>
-
-        <ul className="pl-2 ">
-          {(history?.length ?? 0) === 0 ? (
-            <li className="text-gray-500">No sessions yet</li>
-          ) : (
-            history
-              .slice()
-              .reverse()
-              .map((session, idx) => (
-                <li key={session.id} className="mb-0 items-start flex-col">
-                  <div
-                    className="font-semibold flex  cursor-pointer select-none "
-                    onClick={() =>
-                      setOpenSessions((prev) => ({
-                        ...prev,
-                        [session.sessionName]: !prev[session.sessionName],
-                      }))
-                    }
-                  >
-                    <span className="mr-1 ">
-                      {openSessions[session.sessionName] ? "▼" : "►"}
-                    </span>
-                    {editingSessionId === session.id ? (
-                      <form
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          if (!newSessionName.trim()) return;
-                          await updateSessionNameInDb(
-                            session.id,
-                            newSessionName
-                          );
-
-                          // Update history state
-                          setHistory((prev) =>
-                            prev.map((s) =>
-                              s.id === session.id
-                                ? { ...s, sessionName: newSessionName }
-                                : s
-                            )
-                          );
-
-                          // Update openSessions object key if open
-                          setOpenSessions((prev) => {
-                            if (!(session.sessionName in prev)) return prev;
-                            const { [session.sessionName]: wasOpen, ...rest } =
-                              prev;
-                            return { ...rest, [newSessionName]: wasOpen };
-                          });
-
-                          setEditingSessionId(null);
-                          setNewSessionName("");
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center"
-                      >
-                        <input
-                          className="border rounded px-1 py-0.5 text-sm"
-                          value={newSessionName}
-                          onChange={(e) => setNewSessionName(e.target.value)}
-                          autoFocus
-                        />
-                        <button
-                          type="submit"
-                          className="ml-1 text-xs px-2 py-1 rounded bg-green-200"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          className="ml-1 text-xs px-2 py-1 rounded bg-gray-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingSessionId(null);
-                            setNewSessionName("");
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </form>
-                    ) : (
-                      <>
-                        <span
-                          className={
-                            openSessions[session.sessionName]
-                              ? "text-blue-400"
-                              : ""
-                          }
-                        >
-                          {session.sessionName}
-                        </span>
-
-                        <button
-                          className="ml-2 text-xs px-1 py-0.5 rounded bg-transparent"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingSessionId(session.id);
-                            setNewSessionName(session.sessionName);
-                          }}
-                          title="Rename session"
-                        >
-                          ✏️
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="mt-0">
-                  {openSessions[session.sessionName] && (
-                    <ul className="ml-0">
-                      {session.files.map((file, fIdx) => (
-                        <li
-                          key={fIdx}
-                          className="text-sm flex items-center"
-                          style={{ marginTop: "-15px" }}
-                        >
-                          {/* Determine the emoji based on the file type */}
-                          <span style={{ marginRight: "8px" }}>
-                            {file.type === "csv_document"
-                              ? "📊"
-                              : file.type === "pdf_document"
-                              ? "📄"
-                              : "📁"}
-                          </span>
-                          <span className="flex-1 truncate" style={{marginLeft:'-20px'}}>{file.name}</span>
-                          {console.log("dile", file)}
-                          {file.type === "csv_document" && (
-                            <button
-                              className="px-1 py-1 rounded text-xs"
-                              style={{marginLeft:'-5px'}}
-                              onClick={() => {
-                                setCsvFile1(file);
-                                setActiveHistory(true);
-                                setActiveSessionName(session.sessionName);
-                              }}
-                              disabled={isLoading}
-                            >
-                              {isLoading ? "..." : "⬆️"}
-                            </button>
-                          )}
-                          <button
-                            className="px-1 py-1 rounded text-xs"
-                            style={{marginLeft:'-20px'}}
-
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setLoading(true);
-
-                              // Fetch full session from IndexedDB by id
-                              const dbSession = await getSessionById(
-                                session.id
-                              );
-                              setLoading(false);
-
-                              if (
-                                dbSession &&
-                                dbSession.files &&
-                                dbSession.files[fIdx]
-                              ) {
-                                const file = dbSession.files[fIdx];
-                                const content = file.content || "";
-
-                                let blob;
-                                let mimeType;
-                                console.log("slasla", content);
-                                // Determine the MIME type based on the file type
-                                if (file.type === "csv_document") {
-                                  mimeType = "text/csv";
-                                  blob = new Blob([content], {
-                                    type: mimeType,
-                                  });
-                                }
-
-                                if (file.type === "pdf_document") {
-                                  mimeType = "application/pdf";
-
-                                  // Remove the data URL prefix if present
-                                  const base64Content = content.split(",")[1];
-
-                                  // Check if content is base64
-                                  const isBase64 = /^[A-Za-z0-9+/=]+$/.test(
-                                    base64Content.trim()
-                                  );
-
-                                  if (isBase64) {
-                                    const byteCharacters = atob(base64Content);
-                                    const byteNumbers = new Array(
-                                      byteCharacters.length
-                                    )
-                                      .fill(0)
-                                      .map((_, i) =>
-                                        byteCharacters.charCodeAt(i)
-                                      );
-                                    const byteArray = new Uint8Array(
-                                      byteNumbers
-                                    );
-
-                                    blob = new Blob([byteArray], {
-                                      type: mimeType,
-                                    });
-                                  } else {
-                                    // Assume raw binary (if not base64)
-                                    blob = new Blob([base64Content], {
-                                      type: mimeType,
-                                    });
-                                  }
-
-                                  // Create a URL for the blob and display it
-                                  const url = URL.createObjectURL(blob);
-
-                                  // Example usage with an <iframe>
-                                  const iframe =
-                                    document.createElement("iframe");
-                                  iframe.src = url;
-                                  iframe.width = "100%";
-                                  iframe.height = "600px";
-                                  document.body.appendChild(iframe);
-                                } else {
-                                  alert("Unsupported file type.");
-                                  return;
-                                }
-
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement("a");
-                                a.href = url;
-                                a.download = file.name;
-                                document.body.appendChild(a);
-                                a.click();
-
-                                setTimeout(() => {
-                                  URL.revokeObjectURL(url);
-                                  document.body.removeChild(a);
-                                }, 100);
-                              } else {
-                                alert("File not found in DB.");
-                              }
-                            }}
-                          >
-                            ⬇️
-                          </button>
-
-                          <button
-                            className="px-1 py-1 rounded text-xs"
-                            style={{marginLeft:'-10px'}}
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setLoading(true);
-
-                              // Fetch full session from IndexedDB by id
-                              const dbSession = await getSessionById(
-                                session.id
-                              );
-                              setLoading(false);
-
-                              if (
-                                dbSession &&
-                                dbSession.files &&
-                                dbSession.files[fIdx]
-                              ) {
-                                const file = dbSession.files[fIdx];
-                                const content = file.content || "";
-
-                                // Open new tab
-                                const newWindow = window.open();
-                                if (newWindow) {
-                                  let html = "";
-
-                                  if (file.type === "csv_document") {
-                                    const rowLimit = 1000;
-                                    const allRows = content.trim().split("\n");
-
-                                    const escapeHTML = (str) =>
-                                      str
-                                        .replace(/&/g, "&amp;")
-                                        .replace(/</g, "&lt;")
-                                        .replace(/>/g, "&gt;");
-
-                                    const limitedRows = allRows
-                                      .slice(0, rowLimit)
-                                      .map((row) =>
-                                        row.split(",").map(escapeHTML)
-                                      );
-
-                                    const totalRows = allRows.length;
-
-                                    html = `
-                                              <html>
-                                                <head>
-                                                  <title>${file.name}</title>
-                                                  <style>
-                                                    body { font-family: Arial; padding: 24px; }
-                                                    table { border-collapse: collapse; width: 100%; }
-                                                    td, th { border: 1px solid #ccc; padding: 6px 12px; }
-                                                    th { background: #eee; }
-                                                  </style>
-                                                </head>
-                                                <body>
-                                                  <h2>${file.name}</h2>
-                                                  <table>
-                                                    ${limitedRows
-                                                      .map(
-                                                        (row, i) =>
-                                                          `<tr>${row
-                                                            .map(
-                                                              (cell) =>
-                                                                `<${
-                                                                  i === 0
-                                                                    ? "th"
-                                                                    : "td"
-                                                                }>${cell}</${
-                                                                  i === 0
-                                                                    ? "th"
-                                                                    : "td"
-                                                                }>`
-                                                            )
-                                                            .join("")}</tr>`
-                                                      )
-                                                      .join("")}
-                                                  </table>
-                                                  ${
-                                                    totalRows > rowLimit
-                                                      ? `<p style="color: red;">Showing only the first ${rowLimit} of ${totalRows} rows.</p>`
-                                                      : ""
-                                                  }
-                                                </body>
-                                              </html>
-                                            `;
-                                  } else if (file.type === "pdf_document") {
-                                    html = `
-                                    <html>
-                                      <head>
-                                        <title>${file.name}</title>
-                                        <style>
-                                          body { margin: 0; }
-                                          iframe { border: none; width: 100vw; height: 100vh; }
-                                        </style>
-                                      </head>
-                                      <body>
-                                        <iframe src="${file.content}" type="application/pdf"></iframe>
-                                      </body>
-                                    </html>
-                                  `;
-                                  }
-
-                                  newWindow.document.open();
-                                  newWindow.document.write(html);
-                                  newWindow.document.close();
-                                } else {
-                                  alert(
-                                    "Popup blocked! Please allow popups for this site."
-                                  );
-                                }
-                              } else {
-                                alert("Not found in DB.");
-                              }
-                            }}
-                          >
-                            <p
-                              className="text-2xl"
-                              style={{ color: "#FF5733" }}
-                            >
-                              👁
-                            </p>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  </div>
-                </li>
-              ))
-          )}
-        </ul>
-      </div>
-
-      {/* File Viewer */}
-      {viewedFile && (
+    <>
+      {/* ── Overlay for mobile ── */}
+      {isOpen && (
         <div
-          style={{
-            margin: "40px 0 0 24px",
-            padding: 16,
-            background: "#fafbff",
-            borderRadius: 8,
-            maxWidth: 700,
-          }}
-        >
-          <h3>
-            Viewing:{" "}
-            <b>
-              {viewedFile.sessionName} / {viewedFile.file.name}
-            </b>
-          </h3>
-          {loading ? (
-            <div style={{ padding: 16 }}>Loading...</div>
-          ) : viewedFile.file.name.endsWith(".csv") ? (
-            <CSVTable content={fileContent} />
-          ) : (
-            <pre
-              style={{
-                whiteSpace: "pre-wrap",
-                background: "#f0f0f0",
-                padding: 12,
-                borderRadius: 6,
-                fontSize: "13px",
-              }}
-            >
-              {typeof fileContent === "string"
-                ? fileContent
-                : "No file content available."}
-            </pre>
-          )}
-        </div>
+          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          onClick={onClose}
+        />
       )}
-    </div>
+
+      {/* ── Sidebar Panel ── */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-full w-80  shadow-xl z-30
+          flex flex-col
+          transform transition-transform duration-300 ease-in-out
+
+
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:static lg:z-auto lg:shadow-none
+          lg:border-r lg:border-gray-200
+        `}
+      >
+        {/* ── Logo / Brand ── */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">J</span>
+            </div>
+            <span className="text-lg font-bold text-gray-800">JobPortal</span>
+          </div>
+
+          {/* Close button (mobile only) */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-md hover:bg-gray-100 text-gray-500"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* ── User Info ── */}
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm uppercase shadow">
+            {user?.avatar || user?.name?.charAt(0)}
+          </div>
+
+          {/* Name & Role */}
+          <div>
+            <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                user?.role === "admin"
+                  ? "bg-purple-100 text-purple-600"
+                  : "bg-blue-100 text-blue-600"
+              }`}
+            >
+              {user?.role === "admin" ? "Admin" : "User"}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Navigation Menu ── */}
+        <nav className="flex-1 overflow-y-auto px-4 py-4">
+       
+          <ul className="space-y-1">
+            {menuItems.map((item) => (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+                     transition-all duration-150 group
+                     ${
+                       isActive
+                         ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                     }`
+                  }
+                >
+                  {/* Icon */}
+                  <span className="flex-shrink-0">{item.icon}</span>
+
+                  {/* Label */}
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* ── Footer / Logout ── */}
+        <div className="px-4 py-4 border-t border-gray-100">
+          <button
+            onClick={() => console.log("Logout")}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg
+                       text-sm font-medium text-red-500 hover:bg-red-50
+                       transition-all duration-150"
+          >
+            {/* Logout Icon */}
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0
+                   01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3
+                   3 0 013 3v1"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 
